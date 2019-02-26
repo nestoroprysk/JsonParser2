@@ -1,5 +1,12 @@
 #include "JsonParser.hpp"
 
-void Foo::foo()
+#include <fstream>
+#include <iostream>
+
+JsonParser::JsonParser(std::string const& filePath)
 {
+	std::ifstream ifs(filePath);
+
+	for (std::string line; std::getline(ifs, line);)
+		lines.push_back(std::move(line));
 }

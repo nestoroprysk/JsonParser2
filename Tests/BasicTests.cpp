@@ -1,8 +1,11 @@
 #include "JsonParser.hpp"
+#include "TestsUtils.hpp"
 
 #include "gtest/gtest.h"
 
 TEST(basicTests, edgeCases)
 {
-	EXPECT_EQ(Foo().i, 0);
+	const auto jsonFileName = "Struct";
+	const auto p = JsonParser(TestsUtils::getJsonFileFullPath(jsonFileName));
+	EXPECT_EQ(1, 0);
 }

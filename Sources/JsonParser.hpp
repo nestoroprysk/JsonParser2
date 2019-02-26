@@ -1,6 +1,12 @@
-class Foo
+#pragma once
+
+#include <string>
+#include <vector>
+
+class JsonParser
 {
 public:
-	void foo();
-	int i = 0;
+	JsonParser(std::string const&);
+private:
+	std::vector<std::string> lines;
 };
