@@ -8,5 +8,6 @@ TEST(basicTests, edgeCases)
 {
 	const auto jsonFileName = "Person";
 	auto p = JsonParser(TestsUtils::getJsonFileFullPath(jsonFileName));
-	EXPECT_EQ(p.parse<BasicTestsStructs::Person>().empty(), false);
+	EXPECT_EQ(p.parsedObject<BasicTestsStructs::Person>().has_value(), true);
+	EXPECT_EQ(p.parsedObject<BasicTestsStructs::Person>()->name, "Peter");
 }

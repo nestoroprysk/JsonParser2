@@ -1,15 +1,19 @@
 #pragma once
 
+#include "Exposable.hpp"
+
 namespace BasicTestsStructs
 {
-	struct Person
+	struct Person : Exposable<Person>
 	{
+	public:
 		std::string name;
 		int age = 0;
-	};
-	struct Rectangle
-	{
-		int width = 0;
-		int height = 0;
+	private:
+		void expose() const override
+		{
+			field("name", &Person::name);
+			field("age", &Person::age);
+		}
 	};
 }
