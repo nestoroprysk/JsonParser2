@@ -5,7 +5,7 @@
 
 JsonParser::JsonParser(std::string const& filePath)
 {
-	std::ifstream ifs(filePath);
+	auto ifs = std::ifstream(filePath);
 
 	for (std::string line; std::getline(ifs, line);)
 		lines.push_back(std::move(line));
