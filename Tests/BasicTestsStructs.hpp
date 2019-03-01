@@ -6,26 +6,22 @@ namespace BasicTestsStructs
 {
 	struct Person : Exposable<Person>
 	{
-	public:
 		std::string name;
 		int age = 0;
-	private:
-		void expose() const override
+		static void expose()
 		{
-			field("name", &Person::name);
-			field("age", &Person::age);
+			Exposable<Person>::expose("name", &Person::name);
+			Exposable<Person>::expose("age", &Person::age);
 		}
 	};
 	struct Couple : Exposable<Couple>
 	{
-	public:
 		Person a;
 		Person b;
-	private:
-		void expose() const override
+		static void expose()
 		{
-			field("a", &Couple::a);
-			field("b", &Couple::b);
+			Exposable<Couple>::expose("a", &Couple::a);
+			Exposable<Couple>::expose("b", &Couple::b);
 		}
 	};
 }

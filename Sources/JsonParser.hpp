@@ -10,6 +10,7 @@ class JsonParser
 public:
 	template <typename T>
 	static auto parsedObject(std::string const&) -> std::optional<T>;
+public:
 	template <typename T>
 	static auto parsedObjectImpl(std::string const&) -> T;
 private:
@@ -27,27 +28,18 @@ private:
 template <typename T>
 class Exposable
 {
-private:
-	virtual void expose() const = 0;
 public:
 	using JsonTag = std::string;
 	using FieldFiller = std::function<void(T& o, std::string const&)>;
 	using Schema = std::map<JsonTag, FieldFiller>;
-	auto schema() const -> Schema const&;
-protected:
+public:
 	template <typename M>
-	void field(JsonTag const&, M T::*) const;
+	static void expose(JsonTag const&, M T::*);
+	static auto schema() -> Schema const&;
+	static void unexpose();
 private:
 	static std::optional<Schema> m_opt_schema;
 };
-
-template <typename T>
-auto JsonParser::parsedObject(std::string const& c) -> std::optional<T>
-{
-	const auto opt_oc = objectContent(content(filteredLines(rawLines(c))));
-	if (!opt_oc.has_value()) return {};
-	return parsedObjectImpl<T>(opt_oc.value());
-}
 
 namespace JsonParserUtils
 {
@@ -57,16 +49,11 @@ namespace JsonParserUtils
 }
 
 template <typename T>
-std::optional<typename Exposable<T>::Schema> Exposable<T>::m_opt_schema;
-
-template <typename T>
-auto Exposable<T>::schema() const -> Schema const&
+auto JsonParser::parsedObject(std::string const& c) -> std::optional<T>
 {
-	if (!m_opt_schema.has_value()){
-		m_opt_schema = Schema();
-		expose();
-	}
-	return m_opt_schema.value();
+	const auto opt_oc = objectContent(content(filteredLines(rawLines(c))));
+	if (!opt_oc.has_value()) return {};
+	return parsedObjectImpl<T>(opt_oc.value());
 }
 
 template <typename T>
@@ -79,14 +66,27 @@ auto JsonParser::parsedObjectImpl(std::string const& oc) -> T
 	auto const& schema = result.schema();
 	for (auto const& [expectedTag, f] : schema)
 		f(result, m.at(expectedTag));
+	Exposable<T>::unexpose();
 	return result;
 }
 
-namespace Detail
+template <typename T>
+std::optional<typename Exposable<T>::Schema> Exposable<T>::m_opt_schema;
+
+template <typename T>
+auto Exposable<T>::schema() -> Schema const&
 {
-	template <typename M>
-	M get(std::string const& d)
-	{
+	if (!m_opt_schema.has_value()){
+		m_opt_schema = Schema();
+		T::expose();
+	}
+	return m_opt_schema.value();
+}
+
+template <typename T> template <typename M>
+void Exposable<T>::expose(JsonTag const& k, M T::* p)
+{
+	const auto get = [](std::string const& d) -> M{
 		if constexpr (std::is_same_v<M, std::string>)
 			return d;
 		else if constexpr (std::is_same_v<M, int>)
@@ -95,12 +95,13 @@ namespace Detail
 			return JsonParser::parsedObjectImpl<M>(d);
 		else
 			return {};
-	}
+	};
+	const auto l = [p, get](T& o, std::string const& d){o.*p = get(d);};
+	m_opt_schema->emplace(k, l);
 }
 
-template <typename T> template <typename M>
-void Exposable<T>::field(JsonTag const& k, M T::* p) const
+template <typename T>
+void Exposable<T>::unexpose()
 {
-	const auto l = [p](T& o, std::string const& d){o.*p = Detail::get<M>(d);};
-	m_opt_schema->emplace(k, l);
+	m_opt_schema = std::nullopt;
 }
