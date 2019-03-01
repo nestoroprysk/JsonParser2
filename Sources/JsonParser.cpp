@@ -2,7 +2,6 @@
 
 #include <fstream>
 #include <cassert>
-#include <iostream>
 
 JsonParser::JsonParser(FilePath const& fp)
 	: m_file_content(content(filteredLines(rawLines(fp))))
@@ -66,6 +65,7 @@ auto JsonParser::map(Content const& c, Map& o, int i) -> void
 {
 	if (i >= c.size())
 		return;
+	
 	assert(c[i] == '\"');
 	auto j = i + 1;
 	while (j < c.size() && c[j] != '\"')
@@ -76,18 +76,22 @@ auto JsonParser::map(Content const& c, Map& o, int i) -> void
 	assert(c[j] == ':');
 	++j;
 	assert(j < c.size());
-	assert(c[j] == '\"' || std::isdigit(c[j]));
+	assert(c[j] == '\"' || std::isdigit(c[j]) || c[j] == '{');
+	
 	const auto beginsWithQuote = c[j] == '\"';
 	if (beginsWithQuote){
 		i = j + 1;
 		++j;
 		while (j < c.size() && c[j] != '\"')
 			++j;
-		const auto value = c.substr(i, j - i - 1);
+		assert(j < c.size());
+		const auto value = c.substr(i, j - i);
 		o.insert({key, value});
+		++j;
 		if (j == c.size())
 			return;
 	}
+	
 	const auto isNumber = std::isdigit(c[j]);
 	if (isNumber){
 		i = j;
@@ -98,7 +102,25 @@ auto JsonParser::map(Content const& c, Map& o, int i) -> void
 		if (j == c.size())
 			return;
 	}
-	++j;
+	
+	const auto isStruct = c[j] == '{';
+	if (isStruct){
+		i = j + 1;
+		++j;
+		auto nbBracesToClose = 1;
+		while (j < c.size() && nbBracesToClose > 0){
+			if (c[j] == '{')
+				++nbBracesToClose;
+			else if (c[j] == '}')
+				--nbBracesToClose;
+			++j;
+		}
+		const auto value = c.substr(i, j - i - 1);
+		o.insert({key, value});
+		if (j == c.size())
+			return;
+	}
+	
 	assert(c[j] == ',');
 	++j;
 	map(c, o, j);

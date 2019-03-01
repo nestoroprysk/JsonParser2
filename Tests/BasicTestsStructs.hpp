@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Exposable.hpp"
+#include "JsonParser.hpp"
 
 namespace BasicTestsStructs
 {
@@ -14,6 +14,18 @@ namespace BasicTestsStructs
 		{
 			field("name", &Person::name);
 			field("age", &Person::age);
+		}
+	};
+	struct Couple : Exposable<Couple>
+	{
+	public:
+		Person a;
+		Person b;
+	private:
+		void expose() const override
+		{
+			field("a", &Couple::a);
+			field("b", &Couple::b);
 		}
 	};
 }
