@@ -8,26 +8,20 @@
 class JsonParser
 {
 public:
-	using FilePath = std::string;
-	JsonParser(FilePath const&);
 	template <typename T>
-	auto parsedObject() -> std::optional<T>;
-	using Content = std::string;
+	static auto parsedObject(std::string const&) -> std::optional<T>;
 	template <typename T>
-	static auto parsedObject(Content const&) -> T;
+	static auto parsedObjectImpl(std::string const&) -> T;
 private:
-	using LinesList = std::vector<std::string>;
-	static auto rawLines(FilePath const&) -> LinesList;
-	static auto filteredLines(LinesList const&) -> LinesList;
-	static auto content(LinesList const&) -> Content;
+	static auto rawLines(std::string const&) -> std::vector<std::string>;
+	static auto filteredLines(std::vector<std::string> const&) -> std::vector<std::string>;
+	static auto content(std::vector<std::string> const&) -> std::string;
 private:
-	static auto objectContent(Content const&) -> std::optional<Content>;
+	static auto objectContent(std::string const&) -> std::optional<std::string>;
 	using Map = std::map<std::string, std::string>;
-	static auto map(Content const&) -> Map;
+	static auto map(std::string const&) -> Map;
 private:
-	static auto map(Content const&, Map&, int i = 0) -> void;
-private:
-	Content const m_file_content;
+	static auto map(std::string const&, Map&, int i = 0) -> void;
 };
 
 template <typename T>
@@ -48,11 +42,11 @@ private:
 };
 
 template <typename T>
-auto JsonParser::parsedObject() -> std::optional<T>
+auto JsonParser::parsedObject(std::string const& c) -> std::optional<T>
 {
-	const auto opt_oc = objectContent(m_file_content);
+	const auto opt_oc = objectContent(content(filteredLines(rawLines(c))));
 	if (!opt_oc.has_value()) return {};
-	return parsedObject<T>(opt_oc.value());
+	return parsedObjectImpl<T>(opt_oc.value());
 }
 
 namespace JsonParserUtils
@@ -76,7 +70,7 @@ auto Exposable<T>::schema() const -> Schema const&
 }
 
 template <typename T>
-auto JsonParser::parsedObject(Content const& oc) -> T
+auto JsonParser::parsedObjectImpl(std::string const& oc) -> T
 {
 	static_assert(JsonParserUtils::is_exposable_v<T>,
 		"An object should be exposable so as to be parsed");
@@ -98,7 +92,7 @@ namespace Detail
 		else if constexpr (std::is_same_v<M, int>)
 			return std::stoi(d);
 		else if constexpr (JsonParserUtils::is_exposable_v<M>)
-			return JsonParser::parsedObject<M>(d);
+			return JsonParser::parsedObjectImpl<M>(d);
 		else
 			return {};
 	}

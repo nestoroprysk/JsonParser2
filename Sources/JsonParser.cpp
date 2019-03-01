@@ -3,23 +3,18 @@
 #include <fstream>
 #include <cassert>
 
-JsonParser::JsonParser(FilePath const& fp)
-	: m_file_content(content(filteredLines(rawLines(fp))))
+auto JsonParser::rawLines(std::string const& fp) -> std::vector<std::string>
 {
-}
-
-auto JsonParser::rawLines(FilePath const& fp) -> LinesList
-{
-	LinesList result;
+	std::vector<std::string> result;
 	auto ifs = std::ifstream(fp);
 	for (std::string line; std::getline(ifs, line);)
 		result.push_back(std::move(line));
 	return result;
 }
 
-auto JsonParser::filteredLines(LinesList const& ls) -> LinesList
+auto JsonParser::filteredLines(std::vector<std::string> const& ls) -> std::vector<std::string>
 {
-	LinesList result;
+	std::vector<std::string> result;
 	for (auto const& l : ls){
 		std::string line;
 		for (auto c : l)
@@ -30,15 +25,15 @@ auto JsonParser::filteredLines(LinesList const& ls) -> LinesList
 	return result;
 }
 
-auto JsonParser::content(LinesList const& ls) -> Content
+auto JsonParser::content(std::vector<std::string> const& ls) -> std::string
 {
-	Content result;
+	std::string result;
 	for (auto const& l : ls)
 		result += l;
 	return result;
 }
 
-auto JsonParser::objectContent(Content const& c) -> std::optional<Content>
+auto JsonParser::objectContent(std::string const& c) -> std::optional<std::string>
 {
 	if (c.empty()) return {};
 	auto begin = c.cbegin();
@@ -53,7 +48,7 @@ auto JsonParser::objectContent(Content const& c) -> std::optional<Content>
 	return std::string(begin + 1, end);
 }
 
-auto JsonParser::map(Content const& c) -> Map
+auto JsonParser::map(std::string const& c) -> Map
 {
 	if (c.empty()) return {};
 	auto result = Map();
@@ -61,7 +56,7 @@ auto JsonParser::map(Content const& c) -> Map
 	return result;
 }
 
-auto JsonParser::map(Content const& c, Map& o, int i) -> void
+auto JsonParser::map(std::string const& c, Map& o, int i) -> void
 {
 	if (i >= c.size())
 		return;
