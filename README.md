@@ -1,9 +1,9 @@
 # JsonParser2
----
+
 **A tool for deserializing objects from json files**
 
 ## Typical Usage
----
+
 
 ### Single Object
 
@@ -29,7 +29,7 @@ int main()
 ```
 
 # All You Need
----
+
 is...
 
 1. Your `class`
