@@ -4,6 +4,7 @@
 #include <vector>
 #include <optional>
 #include <map>
+#include <iostream>
 
 class JsonParser
 {
@@ -157,8 +158,7 @@ auto JsonParser::getter() -> std::function<M(std::string const&)>
 		else if constexpr (JsonParserUtils::is_exposable_v<M>)
 			return JsonParser::parsedObjectImpl<M>(d);
 		else if constexpr (JsonParserUtils::is_container_v<M>)
-			if (auto const opt_lc = JsonParser::listContent(d))
-				return JsonParser::parsedListImpl<JsonParserUtils::element_type_t<M>>(opt_lc.value());
+			return JsonParser::parsedListImpl<JsonParserUtils::element_type_t<M>>(d);
 		return {};
 	};
 }
