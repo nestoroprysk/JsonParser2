@@ -1,7 +1,12 @@
 # JsonParser2
+---
 **A tool for deserializing objects from json files**
 
-## Typical usage
+## Typical Usage
+---
+
+### Single Object
+
 Call the function `parsedObject` templated on the desired class and give the path to the json file as an argument.
 ```
 int main()
@@ -11,8 +16,20 @@ int main()
 }
 ```
 
-## All you need
+## Multiple Objects
 
+Call the function `parsedList` to get a list of your objects.
+```
+int main()
+{
+  auto const people = JsonParser::parsedList<Person>("SavedPeople.json");
+  for (auto const& person : people)
+    std::cout << person.name << " is " << person.age << std::endl;
+}
+```
+
+# All You Need
+---
 is...
 
 1. Your `class`
