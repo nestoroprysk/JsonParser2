@@ -9,10 +9,14 @@ class JsonParser
 {
 public:
 	template <typename T>
-	static auto parsedObject(std::string const&) -> std::optional<T>;
+	static auto parsedObject(std::string const& filePath) -> std::optional<T>;
+	template <typename T>
+	static auto parsedList(std::string const& filePath) -> std::optional<std::vector<T>>;
 public:
 	template <typename T>
 	static auto parsedObjectImpl(std::string const&) -> T;
+	template <typename T>
+	static auto parsedListImpl(std::string const&) -> std::optional<std::vector<T>>;
 private:
 	static auto rawLines(std::string const&) -> std::vector<std::string>;
 	static auto filteredLines(std::vector<std::string> const&) -> std::vector<std::string>;
@@ -24,6 +28,7 @@ private:
 	static auto valueExtractors() -> std::vector<ValueExtractor> const&;
 private:
 	static auto objectContent(std::string const&) -> std::optional<std::string>;
+	static auto listContent(std::string const&) -> std::optional<std::string>;
 	static auto map(std::string const&) -> std::map<std::string, std::string>;
 };
 
@@ -59,6 +64,14 @@ auto JsonParser::parsedObject(std::string const& c) -> std::optional<T>
 }
 
 template <typename T>
+auto JsonParser::parsedList(std::string const& c) -> std::optional<std::vector<T>>
+{
+	const auto opt_lc = listContent(content(filteredLines(rawLines(c))));
+	if (!opt_lc.has_value()) return {};
+	return parsedListImpl<T>(opt_lc.value());
+}
+
+template <typename T>
 auto JsonParser::parsedObjectImpl(std::string const& oc) -> T
 {
 	static_assert(JsonParserUtils::is_exposable_v<T>,
@@ -71,6 +84,22 @@ auto JsonParser::parsedObjectImpl(std::string const& oc) -> T
 			f(result, m.at(expectedTag));
 	Exposable<T>::unexpose();
 	return result;
+}
+
+template <typename T>
+auto JsonParser::parsedListImpl(std::string const& lc) -> std::optional<std::vector<T>>
+{
+	static_assert(JsonParserUtils::is_exposable_v<T>,
+		"An object should be exposable so as to be parsed");
+	auto opt_res_list = std::optional<std::vector<T>>();
+	int i = 0;
+	while (const auto opt_res = extract(lc, '{', '}', i)){
+		if (!(opt_res_list)) opt_res_list = std::vector<T>();
+		const auto [r, j] = opt_res.value();
+		opt_res_list->push_back(std::move(parsedObjectImpl<T>(r)));
+		i = j + 1;
+	}
+	return opt_res_list;
 }
 
 template <typename T>

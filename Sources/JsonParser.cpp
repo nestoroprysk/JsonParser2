@@ -39,6 +39,13 @@ auto JsonParser::objectContent(std::string const& c) -> std::optional<std::strin
 	return opt_res->first;
 }
 
+auto JsonParser::listContent(std::string const& c) -> std::optional<std::string>
+{
+	const auto opt_res = extract(c, '[', ']');
+	if (!opt_res) return {};
+	return opt_res->first;
+}
+
 auto JsonParser::extract(std::string const& c, char open, char close, int from) -> OptPair
 {
 	if (c.empty()) return {};
