@@ -17,12 +17,14 @@ private:
 	static auto rawLines(std::string const&) -> std::vector<std::string>;
 	static auto filteredLines(std::vector<std::string> const&) -> std::vector<std::string>;
 	static auto content(std::vector<std::string> const&) -> std::string;
+	using OptPair = std::optional<std::pair<std::string, int>>;
+	static auto extract(std::string const&, char open, char close, int from = 0) -> OptPair;
+	static auto extractIntegral(std::string const& s, int i) -> OptPair;
+	using ValueExtractor = std::function<OptPair(std::string const&, int)>;
+	static auto valueExtractors() -> std::vector<ValueExtractor> const&;
 private:
 	static auto objectContent(std::string const&) -> std::optional<std::string>;
-	using Map = std::map<std::string, std::string>;
-	static auto map(std::string const&) -> Map;
-private:
-	static auto map(std::string const&, Map&, int i = 0) -> void;
+	static auto map(std::string const&) -> std::map<std::string, std::string>;
 };
 
 template <typename T>
@@ -65,7 +67,8 @@ auto JsonParser::parsedObjectImpl(std::string const& oc) -> T
 	auto result = T();
 	auto const& schema = result.schema();
 	for (auto const& [expectedTag, f] : schema)
-		f(result, m.at(expectedTag));
+		if (m.find(expectedTag) != m.end())
+			f(result, m.at(expectedTag));
 	Exposable<T>::unexpose();
 	return result;
 }
@@ -91,6 +94,8 @@ void Exposable<T>::expose(JsonTag const& k, M T::* p)
 			return d;
 		else if constexpr (std::is_same_v<M, int>)
 			return std::stoi(d);
+		else if constexpr (std::is_same_v<M, bool>)
+			return d == "true";
 		else if constexpr (JsonParserUtils::is_exposable_v<M>)
 			return JsonParser::parsedObjectImpl<M>(d);
 		else

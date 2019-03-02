@@ -1,7 +1,6 @@
 #include "JsonParser.hpp"
 
 #include <fstream>
-#include <cassert>
 
 auto JsonParser::rawLines(std::string const& fp) -> std::vector<std::string>
 {
@@ -35,88 +34,91 @@ auto JsonParser::content(std::vector<std::string> const& ls) -> std::string
 
 auto JsonParser::objectContent(std::string const& c) -> std::optional<std::string>
 {
-	if (c.empty()) return {};
-	auto begin = c.cbegin();
-	while (begin != c.cend() && *begin != '{')
-		++begin;
-	if (begin == c.cend()) return {};
-	auto end = c.cend();
-	--end;
-	while (end != c.cbegin() && *end != '}')
-		--end;
-	if (end == c.cbegin()) return {};
-	return std::string(begin + 1, end);
+	const auto opt_res = extract(c, '{', '}');
+	if (!opt_res) return {};
+	return opt_res->first;
 }
 
-auto JsonParser::map(std::string const& c) -> Map
+auto JsonParser::extract(std::string const& c, char open, char close, int from) -> OptPair
 {
 	if (c.empty()) return {};
-	auto result = Map();
-	map(c, result);
+	if (from >= c.size()) return {};
+	if (c[from] != open) return {};
+	auto nbToClose = 1;
+	for (auto i = from + 1; i < c.size(); ++i){
+		const auto e = c[i];
+		if (e == close)
+			--nbToClose;
+		else if (e == open)
+			++nbToClose;
+		if (nbToClose == 0)
+			return std::pair<std::string, int>
+				{c.substr(from + 1, i - from - 1), i + 1};
+	}
+	return {};
+}
+
+auto JsonParser::extractIntegral(std::string const& s, int i) -> OptPair
+{
+	const auto r = std::to_string(std::atoi(&s[i]));
+	const auto successfulExtraction = s.compare(i, r.size(), r) == 0;
+	if (!successfulExtraction)
+		return {};
+	return std::pair<std::string, int>{r, i + r.size()};
+}
+
+auto JsonParser::valueExtractors() -> std::vector<ValueExtractor> const&
+{
+	static const auto result = std::vector<ValueExtractor>{
+		[](std::string const& s, int i){
+			return extract(s, '\"', '\"', i);
+		},
+		[](std::string const& s, int i){
+			return extract(s, '{', '}', i);
+		},
+		[](std::string const& s, int i){
+			return extractIntegral(s, i);
+		},
+		[](std::string const& s, int i) -> OptPair{
+			const auto t = std::string("true");
+			const auto f = std::string("false");
+			if (s.compare(i, t.size(), t) == 0)
+				return std::pair<std::string, int>{t, i + t.size()};
+			if (s.compare(i, f.size(), f) == 0)
+				return std::pair<std::string, int>{f, i + f.size()};
+			return {};
+		},
+	};
 	return result;
 }
 
-auto JsonParser::map(std::string const& c, Map& o, int i) -> void
+auto JsonParser::map(std::string const& c) -> std::map<std::string, std::string>
 {
-	if (i >= c.size())
-		return;
-	
-	assert(c[i] == '\"');
-	auto j = i + 1;
-	while (j < c.size() && c[j] != '\"')
-		++j;
-	assert(j != c.size());
-	auto const key = c.substr(i + 1, j - i - 1);
-	++j;
-	assert(c[j] == ':');
-	++j;
-	assert(j < c.size());
-	assert(c[j] == '\"' || std::isdigit(c[j]) || c[j] == '{');
-	
-	const auto beginsWithQuote = c[j] == '\"';
-	if (beginsWithQuote){
-		i = j + 1;
-		++j;
-		while (j < c.size() && c[j] != '\"')
-			++j;
-		assert(j < c.size());
-		const auto value = c.substr(i, j - i);
-		o.insert({key, value});
-		++j;
-		if (j == c.size())
-			return;
-	}
-	
-	const auto isNumber = std::isdigit(c[j]);
-	if (isNumber){
-		i = j;
-		while (j < c.size() && std::isdigit(c[j]))
-			++j;
-		const auto value = c.substr(i, j - i);
-		o.insert({key, value});
-		if (j == c.size())
-			return;
-	}
-	
-	const auto isStruct = c[j] == '{';
-	if (isStruct){
-		i = j + 1;
-		++j;
-		auto nbBracesToClose = 1;
-		while (j < c.size() && nbBracesToClose > 0){
-			if (c[j] == '{')
-				++nbBracesToClose;
-			else if (c[j] == '}')
-				--nbBracesToClose;
-			++j;
+	auto result = std::map<std::string, std::string>();
+	auto i = 0;
+	auto opt_s = std::optional<std::string>();
+	while (i < c.size()){
+		auto opt_res = std::optional<std::pair<std::string, int>>();
+		if (!opt_s){
+			if ((opt_res = extract(c, '\"', '\"', i))){
+				const auto [r, j] = opt_res.value();
+				opt_s = r;
+				i = j;
+			}
 		}
-		const auto value = c.substr(i, j - i - 1);
-		o.insert({key, value});
-		if (j == c.size())
-			return;
+		else{
+			for (auto ve : valueExtractors()){
+				if ((opt_res = ve(c, i))){
+					const auto [r, j] = opt_res.value();
+					result.emplace(opt_s.value(), r);
+					opt_s = std::nullopt;
+					i = j;
+					break;
+				}
+			}
+		}
+		if (!opt_res)
+			++i;
 	}
-	
-	assert(c[j] == ',');
-	++j;
-	map(c, o, j);
+	return result;
 }

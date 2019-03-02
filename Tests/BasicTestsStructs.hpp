@@ -24,4 +24,14 @@ namespace BasicTestsStructs
 			Exposable<Couple>::expose("b", &Couple::b);
 		}
 	};
+	struct Switcher : Exposable<Switcher>
+	{
+		bool turnedOn = false;
+		bool turnedOff = true;
+		static void expose()
+		{
+			Exposable<Switcher>::expose("turnedOn", &Switcher::turnedOn);
+			Exposable<Switcher>::expose("turnedOff", &Switcher::turnedOff);
+		}
+	};
 }
