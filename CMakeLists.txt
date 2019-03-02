@@ -23,7 +23,9 @@ add_library(JsonParser STATIC ${JsonParserSources})
 
 set(TestsDir ${CMAKE_CURRENT_SOURCE_DIR}/Tests)
 file(GLOB TestsSources ${TestsDir}/BasicTests.cpp
+						${TestsDir}/BasicTests.hpp
 					   ${TestsDir}/TestsUtils.hpp)
+
 add_executable(Tests ${TestsSources})
 
 target_link_libraries(Tests JsonParser)

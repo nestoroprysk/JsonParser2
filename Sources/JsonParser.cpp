@@ -34,14 +34,14 @@ auto JsonParser::content(std::vector<std::string> const& ls) -> std::string
 
 auto JsonParser::objectContent(std::string const& c) -> std::optional<std::string>
 {
-	const auto opt_res = extract(c, '{', '}');
+	auto const opt_res = extract(c, '{', '}');
 	if (!opt_res) return {};
 	return opt_res->first;
 }
 
 auto JsonParser::listContent(std::string const& c) -> std::optional<std::string>
 {
-	const auto opt_res = extract(c, '[', ']');
+	auto const opt_res = extract(c, '[', ']');
 	if (!opt_res) return {};
 	return opt_res->first;
 }
@@ -53,7 +53,7 @@ auto JsonParser::extract(std::string const& c, char open, char close, int from) 
 	if (c[from] != open) return {};
 	auto nbToClose = 1;
 	for (auto i = from + 1; i < c.size(); ++i){
-		const auto e = c[i];
+		auto const e = c[i];
 		if (e == close)
 			--nbToClose;
 		else if (e == open)
@@ -67,16 +67,16 @@ auto JsonParser::extract(std::string const& c, char open, char close, int from) 
 
 auto JsonParser::extractIntegral(std::string const& s, int i) -> OptPair
 {
-	const auto r = std::to_string(std::atoi(&s[i]));
-	const auto successfulExtraction = s.compare(i, r.size(), r) == 0;
-	if (!successfulExtraction)
-		return {};
+	if (i >= s.size()) return {};
+	auto const r = std::to_string(std::atoi(&s[i]));
+	auto const successfulExtraction = s.compare(i, r.size(), r) == 0;
+	if (!successfulExtraction) return {};
 	return std::pair<std::string, int>{r, i + r.size()};
 }
 
 auto JsonParser::valueExtractors() -> std::vector<ValueExtractor> const&
 {
-	static const auto result = std::vector<ValueExtractor>{
+	static auto const result = std::vector<ValueExtractor>{
 		[](std::string const& s, int i){
 			return extract(s, '\"', '\"', i);
 		},
@@ -87,16 +87,27 @@ auto JsonParser::valueExtractors() -> std::vector<ValueExtractor> const&
 			return extractIntegral(s, i);
 		},
 		[](std::string const& s, int i) -> OptPair{
-			const auto t = std::string("true");
-			const auto f = std::string("false");
+			auto const t = std::string("true");
+			auto const f = std::string("false");
 			if (s.compare(i, t.size(), t) == 0)
 				return std::pair<std::string, int>{t, i + t.size()};
 			if (s.compare(i, f.size(), f) == 0)
 				return std::pair<std::string, int>{f, i + f.size()};
 			return {};
 		},
+		[](std::string const& s, int i){
+			return extract(s, '[', ']', i);
+		}
 	};
 	return result;
+}
+
+auto JsonParser::valueExtractor(std::string const& c) -> std::optional<ValueExtractor>
+{
+	for (auto ve : valueExtractors())
+		if (ve(c, 0))
+			return ve;
+	return std::nullopt;
 }
 
 auto JsonParser::map(std::string const& c) -> std::map<std::string, std::string>
@@ -108,7 +119,7 @@ auto JsonParser::map(std::string const& c) -> std::map<std::string, std::string>
 		auto opt_res = std::optional<std::pair<std::string, int>>();
 		if (!opt_s){
 			if ((opt_res = extract(c, '\"', '\"', i))){
-				const auto [r, j] = opt_res.value();
+				auto const [r, j] = opt_res.value();
 				opt_s = r;
 				i = j;
 			}
@@ -116,7 +127,7 @@ auto JsonParser::map(std::string const& c) -> std::map<std::string, std::string>
 		else{
 			for (auto ve : valueExtractors()){
 				if ((opt_res = ve(c, i))){
-					const auto [r, j] = opt_res.value();
+					auto const [r, j] = opt_res.value();
 					result.emplace(opt_s.value(), r);
 					opt_s = std::nullopt;
 					i = j;

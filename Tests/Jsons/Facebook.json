@@ -1,0 +1,17 @@
+{
+	"list": [
+		{
+			"name": "Peter",
+			"age": 20
+		},
+		{
+			"name": "Mary",
+			"age": 19
+		},
+		{
+			"name": "George",
+			"age": 21
+		}
+	],
+	"nbPersons": 3
+}

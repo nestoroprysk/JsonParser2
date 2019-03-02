@@ -34,4 +34,14 @@ namespace BasicTestsStructs
 			Exposable<Switcher>::expose("turnedOff", &Switcher::turnedOff);
 		}
 	};
+	struct Facebook : Exposable<Facebook>
+	{
+		std::vector<Person> list;
+		int nbPersons = 0;
+		static void expose()
+		{
+			Exposable<Facebook>::expose("list", &Facebook::list);
+			Exposable<Facebook>::expose("nbPersons", &Facebook::nbPersons);
+		}
+	};
 }

@@ -1,2 +1,7 @@
 1. check that expose() is implemented
 2. add support of containers
+3. trivially constructable check
+4. copy move from vector to any container
+5. enable not only structs in lists
+6. parsedObjectImpl and parsedListImpl should return opt
+7. make all details private

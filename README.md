@@ -6,7 +6,7 @@ Call the function `parsedObject` templated on the desired class and give the pat
 ```
 int main()
 {
-  const auto person = JsonParser::parsedObject<Person>("SavedPerson.json");
+  auto const person = JsonParser::parsedObject<Person>("SavedPerson.json");
   std::cout << person.name << " is " << person.age << std::endl;
 }
 ```

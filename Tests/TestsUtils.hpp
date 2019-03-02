@@ -13,9 +13,9 @@ namespace TestsUtils
 	}
 	inline std::string getJsonFileFullPath(std::string const& name)
 	{
-		const auto prefix = std::string(Detail::getPathToTestsDir());
-		const auto jsonTestFilesDir = std::string("BasicTestsJsons");
-		const auto suffix = ".json";
+		auto const prefix = std::string(Detail::getPathToTestsDir());
+		auto const jsonTestFilesDir = std::string("Jsons");
+		auto const suffix = ".json";
 		return prefix + '/' + jsonTestFilesDir + '/' + name + suffix;
 	}
 }
