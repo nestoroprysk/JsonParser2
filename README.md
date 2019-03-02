@@ -1,55 +1,57 @@
-<h1><a id="JsonParser2_0"></a>JsonParser2</h1>
-<p><strong>A tool for deserializing objects from json files</strong></p>
-<h2><a id="Typical_usage_3"></a>Typical usage</h2>
-<p>Call the function <code>parsedObject</code> templated on the desired class and give the path to the json file as an argument.</p>
-<pre><code>int main()
+# JsonParser2
+**A tool for deserializing objects from json files**
+
+## Typical usage
+Call the function `parsedObject` templated on the desired class and give the path to the json file as an argument.
+```
+int main()
 {
-    const auto person = JsonParser::parsedObject&lt;Person&gt;(&quot;SavedPerson.json&quot;);
-    std::cout &lt;&lt; person.name &lt;&lt; &quot; is &quot; &lt;&lt; person.age &lt;&lt; std::endl;
+  const auto person = JsonParser::parsedObject<Person>("SavedPerson.json");
+  std::cout << person.name << " is " << person.age << std::endl;
 }
-</code></pre>
-<h2><a id="All_you_need_13"></a>All you need</h2>
-<p>is…</p>
-<ol>
-<li>Your <code>class</code></li>
-</ol>
-<pre><code>struct Person
+```
+
+## All you need
+
+is...
+
+1. Your `class`
+```
+struct Person
 {
-    std::string name;
-    int age = 0;
+  std::string name;
+  int age = 0;
 };
-</code></pre>
-<ol start="2">
-<li>Your class should inherit from the class <code>Exposable</code> templated on itself</li>
-</ol>
-<pre><code>struct Person : Exposable&lt;Person&gt;
+```
+
+2. Your class should inherit from the class `Exposable` templated on itself
+```
+struct Person : Exposable<Person>
 {
-    std::string name;
-    int age = 0;
+  std::string name;
+  int age = 0;
 };
-</code></pre>
-<ol start="3">
-<li>And it must provide a public method <code>expose</code></li>
-</ol>
-<pre><code>struct Person : Exposable&lt;Person&gt;
+```
+3. And it must provide a public method `expose`
+```
+struct Person : Exposable<Person>
 {
-    std::string name;
-    int age = 0;
-    static void expose();
+  std::string name;
+  int age = 0;
+  static void expose();
 };
-</code></pre>
-<ol start="4">
-<li>The body of the method should list all the pairs of <code>tags</code> and <code>pointers to members</code> you want to deserialize</li>
-</ol>
-<pre><code>struct Person : Exposable&lt;Person&gt;
+```
+4. The body of the method should list all the pairs of `tags` and `pointers to members` you want to deserialize
+```
+struct Person : Exposable<Person>
 {
-    std::string name;
-    int age = 0;
-    static void expose()
-    {
-        Exposable&lt;Person&gt;::expose(&quot;name&quot;, &amp;Person::name);
-        Exposable&lt;Person&gt;::expose(&quot;age&quot;, &amp;Person::age);
+  std::string name;
+  int age = 0;
+  static void expose()
+  {
+    Exposable<Person>::expose("name", &Person::name);
+    Exposable<Person>::expose("age", &Person::age);
     }
 };
-</code></pre>
-<p>See <a href="https://github.com/nestoroprysk/JsonParser2/blob/master/Tests/BasicTests.cpp">tests</a> for further examples.</p>
+```
+See [tests](https://github.com/nestoroprysk/JsonParser2/blob/master/Tests/BasicTests.cpp) for further examples.
