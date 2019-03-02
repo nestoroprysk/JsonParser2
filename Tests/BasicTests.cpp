@@ -95,5 +95,11 @@ TEST(basicTests, Facebook)
 	auto const opt_result = JsonParser::parsedObject<BasicTestsStructs::Facebook>(jsonFileName);
 	ASSERT_EQ(opt_result.has_value(), true);
 	ASSERT_EQ(opt_result->list.size(), 3);
+	EXPECT_EQ(opt_result->list.at(0).name, "Peter");
+	EXPECT_EQ(opt_result->list.at(0).age, 20);
+	EXPECT_EQ(opt_result->list.at(1).name, "Mary");
+	EXPECT_EQ(opt_result->list.at(1).age, 19);
+	EXPECT_EQ(opt_result->list.at(2).name, "George");
+	EXPECT_EQ(opt_result->list.at(2).age, 21);
 	EXPECT_EQ(opt_result->nbPersons, 3);
 }
