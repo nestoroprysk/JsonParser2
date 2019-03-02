@@ -51,7 +51,7 @@ struct Person : Exposable<Person>
   {
     Exposable<Person>::expose("name", &Person::name);
     Exposable<Person>::expose("age", &Person::age);
-    }
+  }
 };
 ```
 See [tests](https://github.com/nestoroprysk/JsonParser2/blob/master/Tests/BasicTests.cpp) for further examples.
