@@ -5,3 +5,4 @@
 5. enable not only structs in lists
 6. parsedObjectImpl and parsedListImpl should return opt
 7. make all details private
+8. rearrenge code

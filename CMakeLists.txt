@@ -16,7 +16,8 @@ find_package(GTest REQUIRED)
 
 set(JsonParserDir ${CMAKE_CURRENT_SOURCE_DIR}/Sources)
 file(GLOB JsonParserSources ${JsonParserDir}/JsonParser.cpp
-							${JsonParserDir}/JsonParser.hpp)
+							${JsonParserDir}/JsonParser.hpp
+							${JsonParserDir}/JsonParserUtils.hpp)
 add_library(JsonParser STATIC ${JsonParserSources})
 
 # testing executable
@@ -24,7 +25,7 @@ add_library(JsonParser STATIC ${JsonParserSources})
 set(TestsDir ${CMAKE_CURRENT_SOURCE_DIR}/Tests)
 file(GLOB TestsSources ${TestsDir}/BasicTests.cpp
 						${TestsDir}/BasicTests.hpp
-					   ${TestsDir}/TestsUtils.hpp)
+						${TestsDir}/TestsUtils.hpp)
 
 add_executable(Tests ${TestsSources})
 
