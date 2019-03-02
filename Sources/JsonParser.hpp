@@ -12,31 +12,31 @@ public:
 	static auto parsedObject(std::string const& filePath) -> std::optional<T>;
 	template <typename T>
 	static auto parsedList(std::string const& filePath) -> std::optional<std::vector<T>>;
-public:
+private:
 	template <typename T>
 	static auto parsedObjectImpl(std::string const&) -> T;
 	template <typename T>
 	static auto parsedListImpl(std::string const&) -> std::vector<T>;
 private:
-	template <typename T>
-	static auto assertExposable() -> void;
-private:
+	using OptPair = std::optional<std::pair<std::string, int>>;
+	using ValueExtractor = std::function<OptPair(std::string const&, int)>;
 	static auto rawLines(std::string const&) -> std::vector<std::string>;
 	static auto filteredLines(std::vector<std::string> const&) -> std::vector<std::string>;
 	static auto content(std::vector<std::string> const&) -> std::string;
-	using OptPair = std::optional<std::pair<std::string, int>>;
 	static auto extract(std::string const&, char open, char close, int from = 0) -> OptPair;
 	static auto extractIntegral(std::string const& s, int i) -> OptPair;
-	using ValueExtractor = std::function<OptPair(std::string const&, int)>;
 	static auto valueExtractors() -> std::vector<ValueExtractor> const&;
 	static auto valueExtractor(std::string const&) -> std::optional<ValueExtractor>;
-public:
+private:
 	template <typename T>
 	static auto getter() -> std::function<T(std::string const&)>;
-public:
+private:
 	static auto objectContent(std::string const&) -> std::optional<std::string>;
 	static auto listContent(std::string const&) -> std::optional<std::string>;
 	static auto map(std::string const&) -> std::map<std::string, std::string>;
+private:
+	template <typename T>
+	friend class Exposable;
 };
 
 template <typename T>
@@ -44,15 +44,17 @@ class Exposable
 {
 public:
 	using JsonTag = std::string;
-	using FieldFiller = std::function<void(T& o, std::string const&)>;
-	using Schema = std::map<JsonTag, FieldFiller>;
-public:
 	template <typename M>
 	static void expose(JsonTag const&, M T::*);
+private:
+	using FieldFiller = std::function<void(T& o, std::string const&)>;
+	using Schema = std::map<JsonTag, FieldFiller>;
 	static auto schema() -> Schema const&;
 	static void unexpose();
 private:
 	static std::optional<Schema> m_opt_schema;
+private:
+	friend class JsonParser;
 };
 
 template <typename T>
@@ -74,7 +76,7 @@ auto JsonParser::parsedList(std::string const& c) -> std::optional<std::vector<T
 template <typename T>
 auto JsonParser::parsedObjectImpl(std::string const& oc) -> T
 {
-	assertExposable<T>();
+	JsonParserUtils::assertExposable<T>();
 	auto const m = map(oc);
 	auto result = T();
 	auto const& schema = T::schema();
@@ -101,15 +103,6 @@ auto JsonParser::parsedListImpl(std::string const& lc) -> std::vector<T>
 		i = j + 1;
 	}
 	return result;
-}
-
-template <typename T>
-auto JsonParser::assertExposable() -> void
-{
-	static_assert(JsonParserUtils::is_exposable_v<T>,
-		"A class should inherit from Exposable<T> templated on itself so as to be parsed");
-	static_assert(JsonParserUtils::has_function_expose_v<T>,
-		"A class should define a static function expose() so as to be parsed");
 }
 
 template <typename M>
