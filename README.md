@@ -2,16 +2,13 @@
 <p><strong>A tool for deserializing objects from json files</strong></p>
 <h2><a id="Typical_usage_3"></a>Typical usage</h2>
 <p>Call the function <code>parsedObject</code> templated on the desired class and give the path to the json file as an argument.</p>
-<pre><code>#include &quot;JsonParser.hpp&quot;
-#include &lt;iostream&gt;
-
-int main()
+<pre><code>int main()
 {
     const auto person = JsonParser::parsedObject&lt;Person&gt;(&quot;SavedPerson.json&quot;);
     std::cout &lt;&lt; person.name &lt;&lt; &quot; is &quot; &lt;&lt; person.age &lt;&lt; std::endl;
 }
 </code></pre>
-<h2><a id="All_you_need_16"></a>All you need</h2>
+<h2><a id="All_you_need_13"></a>All you need</h2>
 <p>is…</p>
 <ol>
 <li>Your <code>class</code></li>
@@ -55,4 +52,4 @@ int main()
     }
 };
 </code></pre>
-<p>See tests for further examples.</p>
+<p>See <a href="https://github.com/nestoroprysk/JsonParser2/blob/master/Tests/BasicTests.cpp">tests</a> for further examples.</p>
