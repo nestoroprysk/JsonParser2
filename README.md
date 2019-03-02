@@ -29,7 +29,7 @@
 };
 </code></pre>
 <ol start="3">
-<li>And it must provide a public mechod <code>expose</code></li>
+<li>And it must provide a public method <code>expose</code></li>
 </ol>
 <pre><code>struct Person : Exposable&lt;Person&gt;
 {
