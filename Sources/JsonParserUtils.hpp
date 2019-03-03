@@ -3,9 +3,20 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <functional>
+#include <optional>
 
 template <typename T>
 class Exposable;
+
+#define RETURNS(...) \
+	noexcept(noexcept(__VA_ARGS__)) \
+	-> decltype( __VA_ARGS__ ) \
+	{ return __VA_ARGS__; }
+
+#define OVERLOADS_OF(...) \
+	[](auto&&...args) \
+	RETURNS( __VA_ARGS__( decltype(args)(args)... ))
 
 namespace JsonParserUtils
 {
@@ -70,5 +81,21 @@ namespace JsonParserUtils
 		T result;
 		MoveVectorIntoDetail::append_move_from_to_ord(std::move(src), result);
 		return result;
+	}
+
+	template <typename T>
+	auto extractedArithmetic(std::string const& s, int i, std::function<T(std::string const&)> const& f) -> std::optional<std::pair<std::string, int>>
+	{
+		if (i >= s.size()) return {};
+		try{
+			auto const r = std::to_string(f(&s[i]));
+			return std::pair<std::string, int>{r, i + r.size()};
+		}
+		catch (std::out_of_range const&){
+			return {};
+		}
+		catch (std::invalid_argument const&){
+			return {};
+		}
 	}
 }

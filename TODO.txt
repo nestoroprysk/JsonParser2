@@ -9,3 +9,4 @@
 9. provide cmake build library without tests
 10. getter should return opt get on expose error
 11. distinguith ordered and associative containers
+12. make all names nouns

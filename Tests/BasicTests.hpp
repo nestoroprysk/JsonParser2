@@ -48,12 +48,32 @@ namespace BasicTestsStructs
 	};
 	struct BirthDateRegistrar : Exposable<BirthDateRegistrar>
 	{
-		std::list<int> list;
+		std::list<unsigned long> list;
 		int nbEntries = 0;
 		static void expose()
 		{
 			Exposable<BirthDateRegistrar>::expose("list", &BirthDateRegistrar::list);
 			Exposable<BirthDateRegistrar>::expose("nbEntries", &BirthDateRegistrar::nbEntries);
+		}
+	};
+	struct Arithmetic : Exposable<Arithmetic>
+	{
+		int i = 0;
+		long l = 0;
+		long long ll = 0;
+		size_t st = 0;
+		short s = 0;
+		unsigned long ul = 0;
+		unsigned long long ull = 0;
+		static void expose()
+		{
+			Exposable<Arithmetic>::expose("i", &Arithmetic::i);
+			Exposable<Arithmetic>::expose("l", &Arithmetic::l);
+			Exposable<Arithmetic>::expose("ll", &Arithmetic::ll);
+			Exposable<Arithmetic>::expose("st", &Arithmetic::st);
+			Exposable<Arithmetic>::expose("s", &Arithmetic::s);
+			Exposable<Arithmetic>::expose("ul", &Arithmetic::ul);
+			Exposable<Arithmetic>::expose("ull", &Arithmetic::ull);
 		}
 	};
 }

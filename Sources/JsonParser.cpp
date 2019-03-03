@@ -65,26 +65,17 @@ auto JsonParser::extract(std::string const& c, char open, char close, int from) 
 	return {};
 }
 
-auto JsonParser::extractIntegral(std::string const& s, int i) -> OptPair
-{
-	if (i >= s.size()) return {};
-	auto const r = std::to_string(std::atoi(&s[i]));
-	auto const successfulExtraction = s.compare(i, r.size(), r) == 0;
-	if (!successfulExtraction) return {};
-	return std::pair<std::string, int>{r, i + r.size()};
-}
-
 auto JsonParser::valueExtractors() -> std::vector<ValueExtractor> const&
 {
 	static auto const result = std::vector<ValueExtractor>{
 		[](std::string const& s, int i){
-			return extract(s, '\"', '\"', i);
+			return extract(s, '[', ']', i);
 		},
 		[](std::string const& s, int i){
 			return extract(s, '{', '}', i);
 		},
 		[](std::string const& s, int i){
-			return extractIntegral(s, i);
+			return extract(s, '\"', '\"', i);
 		},
 		[](std::string const& s, int i) -> OptPair{
 			auto const t = std::string("true");
@@ -95,8 +86,11 @@ auto JsonParser::valueExtractors() -> std::vector<ValueExtractor> const&
 				return std::pair<std::string, int>{f, i + f.size()};
 			return {};
 		},
-		[](std::string const& s, int i){
-			return extract(s, '[', ']', i);
+		[](std::string const& s, int i) -> OptPair{
+			return JsonParserUtils::extractedArithmetic<long long>(s, i, OVERLOADS_OF(std::stoll));
+		},
+		[](std::string const& s, int i) -> OptPair{
+			return JsonParserUtils::extractedArithmetic<unsigned long long>(s, i, OVERLOADS_OF(std::stoull));
 		}
 	};
 	return result;

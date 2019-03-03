@@ -25,7 +25,6 @@ private:
 	static auto filteredLines(std::vector<std::string> const&) -> std::vector<std::string>;
 	static auto content(std::vector<std::string> const&) -> std::string;
 	static auto extract(std::string const&, char open, char close, int from = 0) -> OptPair;
-	static auto extractIntegral(std::string const& s, int i) -> OptPair;
 	static auto valueExtractors() -> std::vector<ValueExtractor> const&;
 	static auto valueExtractor(std::string const&) -> std::optional<ValueExtractor>;
 private:
@@ -117,18 +116,20 @@ auto JsonParser::parsedListImpl(std::string const& lc) -> std::vector<T>
 template <typename M>
 auto JsonParser::getter() -> std::optional<Getter<M>>
 {
-	if constexpr (std::is_same_v<M, std::string>)
-		return [](std::string const& d){return d;};
-	if constexpr (std::is_same_v<M, int>)
-		return [](std::string const& d){return std::stoi(d);};
-	if constexpr (std::is_same_v<M, bool>)
-		return [](std::string const& d){return d == "true";};
-	if constexpr (JsonParserUtils::is_exposable_v<M>)
-		return [](std::string const& d){return JsonParser::parsedObjectImpl<M>(d);};
 	if constexpr (JsonParserUtils::is_ord_container_v<M>)
 		return [](std::string const& d){
 			return JsonParserUtils::move_vector_into_ord<M>(
 				JsonParser::parsedListImpl<JsonParserUtils::element_type_t<M>>(d));};
+	if constexpr (JsonParserUtils::is_exposable_v<M>)
+		return [](std::string const& d){return JsonParser::parsedObjectImpl<M>(d);};
+	if constexpr (std::is_same_v<M, std::string>)
+		return [](std::string const& d){return d;};
+	if constexpr (std::is_same_v<M, bool>)
+		return [](std::string const& d){return d == "true";};
+	if constexpr (std::is_signed_v<M>)
+		return [](std::string const& d){return std::stoll(d);};
+	if constexpr (std::is_unsigned_v<M>)
+		return [](std::string const& d){return std::stoull(d);};
 	return std::nullopt;
 }
 

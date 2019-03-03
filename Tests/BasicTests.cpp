@@ -110,8 +110,32 @@ TEST(basicTests, BirthDateRegistrar)
 	auto const opt_result = JsonParser::parsedObject<BasicTestsStructs::BirthDateRegistrar>(jsonFileName);
 	ASSERT_EQ(opt_result.has_value(), true);
 	ASSERT_EQ(opt_result->list.size(), 4);
-	EXPECT_EQ(*opt_result->list.cbegin(), 1996);
-	EXPECT_EQ(*std::next(opt_result->list.cbegin(), 1), 1998);
+	EXPECT_EQ(*opt_result->list.cbegin(), std::numeric_limits<unsigned long long>::min());
+	EXPECT_EQ(*std::next(opt_result->list.cbegin(), 1), std::numeric_limits<unsigned long long>::max());
 	EXPECT_EQ(*std::next(opt_result->list.cbegin(), 2), 1970);
 	EXPECT_EQ(*std::next(opt_result->list.cbegin(), 3), 2001);
+}
+
+TEST(basicTests, Arithmetic)
+{
+	auto const jsonFileName = TestsUtils::getJsonFileFullPath("Arithmetic");
+	auto const opt_result = JsonParser::parsedList<BasicTestsStructs::Arithmetic>(jsonFileName);
+	ASSERT_EQ(opt_result.has_value(), true);
+	ASSERT_EQ(opt_result->size(), 2);
+	auto const min = opt_result->at(0);
+	EXPECT_EQ(min.i, std::numeric_limits<int>::min());
+	EXPECT_EQ(min.l, std::numeric_limits<long>::min());
+	EXPECT_EQ(min.ll, std::numeric_limits<long long>::min());
+	EXPECT_EQ(min.st, std::numeric_limits<size_t>::min());
+	EXPECT_EQ(min.s, std::numeric_limits<short>::min());
+	EXPECT_EQ(min.ul, std::numeric_limits<unsigned long>::min());
+	EXPECT_EQ(min.ull, std::numeric_limits<unsigned long long>::min());
+	auto const max = opt_result->at(1);
+	EXPECT_EQ(max.i, std::numeric_limits<int>::max());
+	EXPECT_EQ(max.l, std::numeric_limits<long>::max());
+	EXPECT_EQ(max.ll, std::numeric_limits<long long>::max());
+	EXPECT_EQ(max.st, std::numeric_limits<size_t>::max());
+	EXPECT_EQ(max.s, std::numeric_limits<short>::max());
+	EXPECT_EQ(max.ull, std::numeric_limits<unsigned long long>::max());
+	EXPECT_EQ(max.ull, std::numeric_limits<unsigned long long>::max());
 }
