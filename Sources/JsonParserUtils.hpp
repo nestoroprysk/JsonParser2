@@ -24,7 +24,7 @@ namespace JsonParserUtils
 	static constexpr bool has_function_expose_v =
 		decltype(ExposableDetail::has_expose_function(std::declval<T&>()))::value;
 
-	namespace ContainerDetail
+	namespace OrdContainerDetail
 	{
 		template <typename T>
 		static constexpr auto is_one_of_supported_ord_containers(std::vector<T> const&) -> std::true_type;
@@ -35,7 +35,7 @@ namespace JsonParserUtils
 
 	template <typename T>
 	static constexpr bool is_ord_container_v =
-		decltype(ContainerDetail::is_one_of_supported_ord_containers(std::declval<T&>()))::value;
+		decltype(OrdContainerDetail::is_one_of_supported_ord_containers(std::declval<T&>()))::value;
 
 	template <typename T>
 	using element_type_t = std::remove_reference_t<decltype(*std::begin(std::declval<T&>()))>;
