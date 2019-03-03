@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <map>
+#include <iostream>
 
 class JsonParser
 {
@@ -28,8 +29,13 @@ private:
 	static auto valueExtractors() -> std::vector<ValueExtractor> const&;
 	static auto valueExtractor(std::string const&) -> std::optional<ValueExtractor>;
 private:
-	template <typename T>
-	static auto getter() -> std::function<T(std::string const&)>;
+	template <typename M>
+	using Getter = std::function<M(std::string const&)>;
+	template <typename M>
+	static auto getter() -> std::optional<Getter<M>>;
+	template <typename M>
+	static auto getterFound(std::optional<Getter<M>> const&,
+		std::optional<std::string> const& errorMessage = std::nullopt) -> bool;
 private:
 	static auto objectContent(std::string const&) -> std::optional<std::string>;
 	static auto listContent(std::string const&) -> std::optional<std::string>;
@@ -93,7 +99,10 @@ auto JsonParser::parsedListImpl(std::string const& lc) -> std::vector<T>
 	const auto opt_ve = valueExtractor(lc);
 	if (!opt_ve) return {};
 	auto const ve = opt_ve.value();
-	auto const g = getter<T>();
+	auto const opt_g = getter<T>();
+	if (!getterFound(opt_g))
+		return {};
+	auto const g = opt_g.value();
 	auto result = std::vector<T>();
 	int i = 0;
 	while (auto const opt_res = ve(lc, i)){
@@ -106,21 +115,31 @@ auto JsonParser::parsedListImpl(std::string const& lc) -> std::vector<T>
 }
 
 template <typename M>
-auto JsonParser::getter() -> std::function<M(std::string const&)>
+auto JsonParser::getter() -> std::optional<Getter<M>>
 {
-	return [](std::string const& d) -> M{
-		if constexpr (std::is_same_v<M, std::string>)
-			return d;
-		else if constexpr (std::is_same_v<M, int>)
-			return std::stoi(d);
-		else if constexpr (std::is_same_v<M, bool>)
-			return d == "true";
-		else if constexpr (JsonParserUtils::is_exposable_v<M>)
-			return JsonParser::parsedObjectImpl<M>(d);
-		else if constexpr (JsonParserUtils::is_container_v<M>)
-			return JsonParser::parsedListImpl<JsonParserUtils::element_type_t<M>>(d);
-		return {};
-	};
+	if constexpr (std::is_same_v<M, std::string>)
+		return [](std::string const& d){return d;};
+	if constexpr (std::is_same_v<M, int>)
+		return [](std::string const& d){return std::stoi(d);};
+	if constexpr (std::is_same_v<M, bool>)
+		return [](std::string const& d){return d == "true";};
+	if constexpr (JsonParserUtils::is_exposable_v<M>)
+		return [](std::string const& d){return JsonParser::parsedObjectImpl<M>(d);};
+	if constexpr (JsonParserUtils::is_container_v<M>)
+		return [](std::string const& d){
+			return JsonParserUtils::move_vector_into<M>(
+				JsonParser::parsedListImpl<JsonParserUtils::element_type_t<M>>(d));};
+	return std::nullopt;
+}
+
+template <typename M>
+auto JsonParser::getterFound(std::optional<Getter<M>> const& opt_g,
+	std::optional<std::string> const& errorMessage) -> bool
+{
+	const auto result = opt_g.has_value();
+	if (!result && errorMessage.has_value())
+		std::cerr << errorMessage.value() << std::endl;
+	return result;
 }
 
 template <typename T>
@@ -136,7 +155,10 @@ auto Exposable<T>::schema() -> Schema const&
 template <typename T> template <typename M>
 void Exposable<T>::expose(JsonTag const& k, M T::* p)
 {
-	auto const g = JsonParser::getter<M>();
+	auto const opt_g = JsonParser::getter<M>();
+	if (!JsonParser::getterFound(opt_g, JsonParserUtils::ignoreTagError(k)))
+		return;
+	auto const g = opt_g.value();
 	auto const f = [p, g](T& o, std::string const& d){o.*p = g(d);};
 	m_opt_schema->emplace(k, f);
 }

@@ -103,3 +103,15 @@ TEST(basicTests, Facebook)
 	EXPECT_EQ(opt_result->list.at(2).age, 21);
 	EXPECT_EQ(opt_result->nbPersons, 3);
 }
+
+TEST(basicTests, BirthDateRegistrar)
+{
+	auto const jsonFileName = TestsUtils::getJsonFileFullPath("BirthDateRegistrar");
+	auto const opt_result = JsonParser::parsedObject<BasicTestsStructs::BirthDateRegistrar>(jsonFileName);
+	ASSERT_EQ(opt_result.has_value(), true);
+	ASSERT_EQ(opt_result->list.size(), 4);
+	EXPECT_EQ(*opt_result->list.cbegin(), 1996);
+	EXPECT_EQ(*std::next(opt_result->list.cbegin(), 1), 1998);
+	EXPECT_EQ(*std::next(opt_result->list.cbegin(), 2), 1970);
+	EXPECT_EQ(*std::next(opt_result->list.cbegin(), 3), 2001);
+}

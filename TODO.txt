@@ -1,8 +1,11 @@
 1. check that expose() is implemented
 2. add support of containers
 3. trivially constructable check
-4. copy move from vector to any container
+4. [!] copy move from vector to any container
 5. enable not only structs in lists
 6. parsedObjectImpl and parsedListImpl should return opt
 7. make all details private
 8. rearrenge code
+9. provide cmake build library without tests
+10. getter should return opt get on expose error
+11. distinguith ordered and associative containers

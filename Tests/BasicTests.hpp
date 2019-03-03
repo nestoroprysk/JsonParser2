@@ -2,6 +2,8 @@
 
 #include "JsonParser.hpp"
 
+#include <list>
+
 namespace BasicTestsStructs
 {
 	struct Person : Exposable<Person>
@@ -42,6 +44,16 @@ namespace BasicTestsStructs
 		{
 			Exposable<Facebook>::expose("list", &Facebook::list);
 			Exposable<Facebook>::expose("nbPersons", &Facebook::nbPersons);
+		}
+	};
+	struct BirthDateRegistrar : Exposable<BirthDateRegistrar>
+	{
+		std::list<int> list;
+		int nbEntries = 0;
+		static void expose()
+		{
+			Exposable<BirthDateRegistrar>::expose("list", &BirthDateRegistrar::list);
+			Exposable<BirthDateRegistrar>::expose("nbEntries", &BirthDateRegistrar::nbEntries);
 		}
 	};
 }
