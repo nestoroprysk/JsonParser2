@@ -87,7 +87,7 @@ auto JsonParser::valueExtractors() -> std::vector<ValueExtractor> const&
 			return {};
 		},
 		[](std::string const& s, int i) -> OptPair{
-			const auto opt_res = JsonParserUtils::extractedArithmetic<long long>(s, i, OVERLOADS_OF(std::stoll));
+			auto const opt_res = JsonParserUtils::extractedArithmetic<long long>(s, i, OVERLOADS_OF(std::stoll));
 			if (!opt_res)
 				return JsonParserUtils::extractedArithmetic<unsigned long long>(s, i, OVERLOADS_OF(std::stoull));
 			return opt_res;

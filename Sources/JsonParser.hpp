@@ -73,6 +73,7 @@ auto JsonParser::parsedObject(std::string const& c) -> std::optional<T>
 template <typename T>
 auto JsonParser::parsedList(std::string const& c) -> std::optional<std::vector<T>>
 {
+	JsonParserUtils::prerequisitesSatisfied<T>();
 	auto const opt_lc = listContent(content(filteredLines(rawLines(c))));
 	if (!opt_lc.has_value()) return {};
 	return parsedListImpl<T>(opt_lc.value());
@@ -81,7 +82,7 @@ auto JsonParser::parsedList(std::string const& c) -> std::optional<std::vector<T
 template <typename T>
 auto JsonParser::parsedObjectImpl(std::string const& oc) -> T
 {
-	JsonParserUtils::assertExposable<T>();
+	JsonParserUtils::prerequisitesSatisfied<T>();
 	auto const m = map(oc);
 	auto result = T();
 	auto const& schema = T::schema();
