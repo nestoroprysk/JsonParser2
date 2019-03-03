@@ -29,12 +29,11 @@ private:
 	static auto valueExtractor(std::string const&) -> std::optional<ValueExtractor>;
 private:
 	template <typename M>
-	using Getter = std::function<M(std::string const&)>;
+	using Getter = std::function<std::optional<M>(std::string const&)>;
 	template <typename M>
-	static auto getter() -> std::optional<Getter<M>>;
+	static auto getters() -> std::vector<Getter<M>> const&;
 	template <typename M>
-	static auto getterFound(std::optional<Getter<M>> const&,
-		std::optional<std::string> const& errorMessage = std::nullopt) -> bool;
+	static auto value(std::string const&) -> std::optional<M>;
 private:
 	static auto objectContent(std::string const&) -> std::optional<std::string>;
 	static auto listContent(std::string const&) -> std::optional<std::string>;
@@ -100,48 +99,67 @@ auto JsonParser::parsedListImpl(std::string const& lc) -> std::vector<T>
 	const auto opt_ve = valueExtractor(lc);
 	if (!opt_ve) return {};
 	auto const ve = opt_ve.value();
-	auto const opt_g = getter<T>();
-	if (!getterFound(opt_g)) return {};
-	auto const g = opt_g.value();
 	auto result = std::vector<T>();
 	int i = 0;
 	while (auto const opt_res = ve(lc, i)){
 		auto const [v, j] = opt_res.value();
-		auto element = T();
-		result.push_back(std::move(g(v)));
+		auto opt_elem = value<T>(v);
+		if (!opt_elem){
+			std::cerr << JsonParserUtils::parseError(v) << std::endl;
+			continue;
+		}
+		result.push_back(std::move(opt_elem.value()));
 		i = j + 1;
 	}
 	return result;
 }
 
 template <typename M>
-auto JsonParser::getter() -> std::optional<Getter<M>>
+auto JsonParser::getters() -> std::vector<Getter<M>> const&
 {
-	if constexpr (JsonParserUtils::is_ord_container_v<M>)
-		return [](std::string const& d){
-			return JsonParserUtils::move_vector_into_ord<M>(
-				JsonParser::parsedListImpl<JsonParserUtils::element_type_t<M>>(d));};
-	if constexpr (JsonParserUtils::is_exposable_v<M>)
-		return [](std::string const& d){return JsonParser::parsedObjectImpl<M>(d);};
-	if constexpr (std::is_same_v<M, std::string>)
-		return [](std::string const& d){return d;};
-	if constexpr (std::is_same_v<M, bool>)
-		return [](std::string const& d){return d == "true";};
-	if constexpr (std::is_signed_v<M>)
-		return [](std::string const& d){return std::stoll(d);};
-	if constexpr (std::is_unsigned_v<M>)
-		return [](std::string const& d){return std::stoull(d);};
-	return std::nullopt;
+	static auto const result = std::vector<Getter<M>>{
+		[](std::string const& d) -> std::optional<M>{
+			if constexpr (JsonParserUtils::is_ord_container_v<M>)
+				return JsonParserUtils::move_vector_into_ord<M>(
+						JsonParser::parsedListImpl<JsonParserUtils::element_type_t<M>>(d));
+			return std::nullopt;
+		},
+		[](std::string const& d) -> std::optional<M>{
+			if constexpr (JsonParserUtils::is_exposable_v<M>)
+				return JsonParser::parsedObjectImpl<M>(d);
+			return std::nullopt;
+		},
+		[](std::string const& d) -> std::optional<M>{
+			if constexpr (std::is_same_v<M, std::string>)
+				return d;
+			return std::nullopt;
+		},
+		[](std::string const& d) -> std::optional<M>{
+			if constexpr (std::is_same_v<M, bool>)
+				return d == "true";
+			return std::nullopt;
+		},
+		[](std::string const& d) -> std::optional<M>{
+			if constexpr (std::is_signed_v<M>)
+				return JsonParserUtils::safelyConvertedArithmetic<M>(d, OVERLOADS_OF(std::stoll));
+			return std::nullopt;
+		},
+		[](std::string const& d) -> std::optional<M>{
+			if constexpr (std::is_unsigned_v<M>)
+				return JsonParserUtils::safelyConvertedArithmetic<M>(d, OVERLOADS_OF(std::stoull));
+			return std::nullopt;
+		}
+	};
+	return result;
 }
 
 template <typename M>
-auto JsonParser::getterFound(std::optional<Getter<M>> const& opt_g,
-	std::optional<std::string> const& errorMessage) -> bool
+auto JsonParser::value(std::string const& c) -> std::optional<M>
 {
-	const auto result = opt_g.has_value();
-	if (!result && errorMessage.has_value())
-		std::cerr << errorMessage.value() << std::endl;
-	return result;
+	for (auto g : getters<M>())
+		if (auto opt_res = g(c))
+			return std::move(opt_res);
+	return std::nullopt;
 }
 
 template <typename T>
@@ -157,11 +175,15 @@ auto Exposable<T>::schema() -> Schema const&
 template <typename T> template <typename M>
 void Exposable<T>::expose(JsonTag const& k, M T::* p)
 {
-	auto const opt_g = JsonParser::getter<M>();
-	if (!JsonParser::getterFound(opt_g, JsonParserUtils::ignoreTagError(k)))
-		return;
-	auto const g = opt_g.value();
-	auto const f = [p, g](T& o, std::string const& d){o.*p = g(d);};
+	auto const f = [p, k](T& o, std::string const& d){
+		auto opt_res = JsonParser::value<M>(d);
+		if (!opt_res){
+			std::cerr << JsonParserUtils::ignoreTagError(k) << std::endl;
+			std::cerr << JsonParserUtils::parseError(d) << std::endl;
+			return;
+		}
+		o.*p = std::move(opt_res.value());
+	};
 	m_opt_schema->emplace(k, f);
 }
 

@@ -72,6 +72,11 @@ namespace JsonParserUtils
 		return std::string("Warning: tag [" + t + "] ignored.");
 	}
 
+	inline std::string parseError(std::string const& c)
+	{
+		return std::string("Warning: failed to extract value from [" + c + "]");
+	}
+
 	namespace MoveVectorIntoDetail
 	{
 		template <typename T, typename M>
@@ -91,12 +96,10 @@ namespace JsonParserUtils
 	}
 
 	template <typename T>
-	auto extractedArithmetic(std::string const& s, int i, std::function<T(std::string const&)> const& f) -> std::optional<std::pair<std::string, int>>
+	auto safelyConvertedArithmetic(std::string const& s, std::function<T(std::string const&)> const& f) -> std::optional<T>
 	{
-		if (i >= s.size()) return {};
 		try{
-			auto const r = std::to_string(f(&s[i]));
-			return std::pair<std::string, int>{r, i + r.size()};
+			return f(s);
 		}
 		catch (std::out_of_range const&){
 			return {};
@@ -104,5 +107,15 @@ namespace JsonParserUtils
 		catch (std::invalid_argument const&){
 			return {};
 		}
+	}
+
+	template <typename T>
+	auto extractedArithmetic(std::string const& s, int i, std::function<T(std::string const&)> const& f) -> std::optional<std::pair<std::string, int>>
+	{
+		if (i >= s.size()) return {};
+		auto const opt_r = safelyConvertedArithmetic(&s[i], f);
+		if (!opt_r) return {};
+		auto const r = std::to_string(opt_r.value());
+		return std::pair<std::string, int>{r, i + r.size()};
 	}
 }
