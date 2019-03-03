@@ -58,19 +58,23 @@ namespace BasicTestsStructs
 	};
 	struct Arithmetic : Exposable<Arithmetic>
 	{
+		unsigned int ui = 0;
 		int i = 0;
 		long l = 0;
 		long long ll = 0;
 		size_t st = 0;
+		unsigned short us = 0;
 		short s = 0;
 		unsigned long ul = 0;
 		unsigned long long ull = 0;
 		static void expose()
 		{
+			Exposable<Arithmetic>::expose("ui", &Arithmetic::ui);
 			Exposable<Arithmetic>::expose("i", &Arithmetic::i);
 			Exposable<Arithmetic>::expose("l", &Arithmetic::l);
 			Exposable<Arithmetic>::expose("ll", &Arithmetic::ll);
 			Exposable<Arithmetic>::expose("st", &Arithmetic::st);
+			Exposable<Arithmetic>::expose("us", &Arithmetic::us);
 			Exposable<Arithmetic>::expose("s", &Arithmetic::s);
 			Exposable<Arithmetic>::expose("ul", &Arithmetic::ul);
 			Exposable<Arithmetic>::expose("ull", &Arithmetic::ull);
