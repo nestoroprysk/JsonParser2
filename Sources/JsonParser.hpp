@@ -125,9 +125,9 @@ auto JsonParser::getter() -> std::optional<Getter<M>>
 		return [](std::string const& d){return d == "true";};
 	if constexpr (JsonParserUtils::is_exposable_v<M>)
 		return [](std::string const& d){return JsonParser::parsedObjectImpl<M>(d);};
-	if constexpr (JsonParserUtils::is_container_v<M>)
+	if constexpr (JsonParserUtils::is_ord_container_v<M>)
 		return [](std::string const& d){
-			return JsonParserUtils::move_vector_into<M>(
+			return JsonParserUtils::move_vector_into_ord<M>(
 				JsonParser::parsedListImpl<JsonParserUtils::element_type_t<M>>(d));};
 	return std::nullopt;
 }

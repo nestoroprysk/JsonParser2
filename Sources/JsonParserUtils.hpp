@@ -27,15 +27,15 @@ namespace JsonParserUtils
 	namespace ContainerDetail
 	{
 		template <typename T>
-		static constexpr auto is_one_of_supported_containers(std::vector<T> const&) -> std::true_type;
+		static constexpr auto is_one_of_supported_ord_containers(std::vector<T> const&) -> std::true_type;
 		template <typename T>
-		static constexpr auto is_one_of_supported_containers(std::list<T> const&) -> std::true_type;
-		static constexpr auto is_one_of_supported_containers(...) -> std::false_type;
+		static constexpr auto is_one_of_supported_ord_containers(std::list<T> const&) -> std::true_type;
+		static constexpr auto is_one_of_supported_ord_containers(...) -> std::false_type;
 	}
 
 	template <typename T>
-	static constexpr bool is_container_v =
-		decltype(ContainerDetail::is_one_of_supported_containers(std::declval<T&>()))::value;
+	static constexpr bool is_ord_container_v =
+		decltype(ContainerDetail::is_one_of_supported_ord_containers(std::declval<T&>()))::value;
 
 	template <typename T>
 	using element_type_t = std::remove_reference_t<decltype(*std::begin(std::declval<T&>()))>;
@@ -57,7 +57,7 @@ namespace JsonParserUtils
 	namespace MoveVectorIntoDetail
 	{
 		template <typename T, typename M>
-		auto append_move_from_to(std::vector<T>&& src, M& dst) -> void
+		auto append_move_from_to_ord(std::vector<T>&& src, M& dst) -> void
 		{
 			std::copy(std::make_move_iterator(src.begin()),
 				std::make_move_iterator(src.end()), std::back_inserter(dst));
@@ -65,10 +65,10 @@ namespace JsonParserUtils
 	}
 
 	template <typename T>
-	auto move_vector_into(std::vector<element_type_t<T>>&& src) -> T
+	auto move_vector_into_ord(std::vector<element_type_t<T>>&& src) -> T
 	{
 		T result;
-		MoveVectorIntoDetail::append_move_from_to(std::move(src), result);
+		MoveVectorIntoDetail::append_move_from_to_ord(std::move(src), result);
 		return result;
 	}
 }
