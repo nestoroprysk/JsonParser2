@@ -73,7 +73,6 @@ auto JsonParser::parsedObject(std::string const& c) -> std::optional<T>
 template <typename T>
 auto JsonParser::parsedList(std::string const& c) -> std::optional<std::vector<T>>
 {
-	JsonParserUtils::prerequisitesSatisfied<T>();
 	auto const opt_lc = listContent(content(filteredLines(rawLines(c))));
 	if (!opt_lc.has_value()) return {};
 	return parsedListImpl<T>(opt_lc.value());
@@ -82,7 +81,8 @@ auto JsonParser::parsedList(std::string const& c) -> std::optional<std::vector<T
 template <typename T>
 auto JsonParser::parsedObjectImpl(std::string const& oc) -> T
 {
-	JsonParserUtils::prerequisitesSatisfied<T>();
+	JsonParserUtils::exposable<T>();
+	JsonParserUtils::defaultConstructable<T>();
 	auto const m = map(oc);
 	auto result = T();
 	auto const& schema = T::schema();
@@ -96,12 +96,12 @@ auto JsonParser::parsedObjectImpl(std::string const& oc) -> T
 template <typename T>
 auto JsonParser::parsedListImpl(std::string const& lc) -> std::vector<T>
 {
+	JsonParserUtils::defaultConstructable<T>();
 	const auto opt_ve = valueExtractor(lc);
 	if (!opt_ve) return {};
 	auto const ve = opt_ve.value();
 	auto const opt_g = getter<T>();
-	if (!getterFound(opt_g))
-		return {};
+	if (!getterFound(opt_g)) return {};
 	auto const g = opt_g.value();
 	auto result = std::vector<T>();
 	int i = 0;

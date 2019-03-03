@@ -52,12 +52,17 @@ namespace JsonParserUtils
 	using element_type_t = std::remove_reference_t<decltype(*std::begin(std::declval<T&>()))>;
 
 	template <typename T>
-	auto prerequisitesSatisfied() -> void
+	auto exposable() -> void
 	{
 		static_assert(JsonParserUtils::is_exposable_v<T>,
 			"A class should inherit from Exposable<T> templated on itself so as to be parsed");
 		static_assert(JsonParserUtils::has_function_expose_v<T>,
 			"A class should define a static function expose() so as to be parsed");
+	}
+
+	template <typename T>
+	auto defaultConstructable() -> void
+	{
 		static_assert(std::is_default_constructible_v<T>,
 			"A class should be default constructable to be parsed");
 	}

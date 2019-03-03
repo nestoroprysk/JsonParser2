@@ -1,4 +1,4 @@
 - add support of std::map
 - provide cmake build library without tests
-- make all names nouns
 - support std::pair
+- assert all the prerequisites (e.g. push_back)
