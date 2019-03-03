@@ -80,8 +80,10 @@ auto JsonParser::valueExtractors() -> std::vector<ValueExtractor> const&
 		[](std::string const& s, int i) -> OptPair{
 			auto const t = std::string("true");
 			auto const f = std::string("false");
+			if (s.size() < i + t.size()) return {};
 			if (s.compare(i, t.size(), t) == 0)
 				return std::pair<std::string, int>{t, i + t.size()};
+			if (s.size() < i + f.size()) return {};
 			if (s.compare(i, f.size(), f) == 0)
 				return std::pair<std::string, int>{f, i + f.size()};
 			return {};
@@ -94,14 +96,6 @@ auto JsonParser::valueExtractors() -> std::vector<ValueExtractor> const&
 		}
 	};
 	return result;
-}
-
-auto JsonParser::valueExtractor(std::string const& c) -> std::optional<ValueExtractor>
-{
-	for (auto ve : valueExtractors())
-		if (ve(c, 0))
-			return ve;
-	return std::nullopt;
 }
 
 auto JsonParser::map(std::string const& c) -> std::map<std::string, std::string>
