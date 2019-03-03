@@ -72,3 +72,21 @@ struct Person : Exposable<Person>
 };
 ```
 See [tests](https://github.com/nestoroprysk/JsonParser2/blob/master/Tests/BasicTests.cpp) for further examples.
+
+## Supported Types
+
+### Basic
+- std::string
+- bool
+### Integral
+- shor
+- unsigned short
+- int
+- unsigned int
+- long
+- unsigned long
+- long long
+- unsigned long long 
+### Containers
+- std::vector
+- std::list
