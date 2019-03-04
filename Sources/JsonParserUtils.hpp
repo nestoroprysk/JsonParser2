@@ -105,10 +105,10 @@ namespace JsonParserUtils
 	}
 
 	template <typename T>
-	auto safelyConvertedArithmetic(char const* s, std::function<T(char const*)> const& f) -> std::optional<T>
+	auto safelyConvertedArithmetic(std::string_view s, std::function<T(std::string const&)> const& f) -> std::optional<T>
 	{
 		try{
-			return f(s);
+			return f(s.data());
 		}
 		catch (std::out_of_range const&){
 			return {};
@@ -135,13 +135,12 @@ namespace JsonParserUtils
 	}
 
 	template <typename T>
-	auto extractedArithmetic(std::string_view s, int i, std::function<T(char const*)> const& f) -> std::optional<std::pair<std::string_view, int>>
+	auto extractedArithmetic(std::string_view s, int i, std::function<T(std::string const&)> const& f) -> std::optional<std::pair<std::string_view, int>>
 	{
 		if (i >= s.size()) return {};
-		auto const opt_r = safelyConvertedArithmetic(&s[i], f);
+		auto const opt_r = safelyConvertedArithmetic(s.substr(i, s.size() - i), f);
 		if (!opt_r) return {};
 		auto const len = ExtractedArithmeticDetail::nbLen(opt_r.value());
-		auto const r = std::string_view(&s[i], len);
-		return std::pair<std::string_view, int>{r, i + r.size()};
+		return std::pair<std::string_view, int>{s.substr(i, len), i + len};
 	}
 }
