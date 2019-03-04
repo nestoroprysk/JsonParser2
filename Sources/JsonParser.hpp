@@ -5,6 +5,7 @@
 #include <optional>
 #include <map>
 #include <iostream>
+#include <string_view>
 
 class JsonParser
 {
@@ -97,10 +98,10 @@ auto JsonParser::parsedListImpl(std::string const& lc) -> std::vector<T>
 	JsonParserUtils::defaultConstructable<T>();
 	auto result = std::vector<T>();
 	int i = 0;
-	for (auto ve : valueExtractors()){
+	for (auto const& ve : valueExtractors()){
 		while (auto const opt_res = ve(lc, i)){
 			auto const [v, j] = opt_res.value();
-			auto opt_elem = get<T>(v);
+			auto const opt_elem = get<T>(v);
 			if (!opt_elem){
 				std::cerr << JsonParserUtils::parseError(v) << std::endl;
 				continue;
@@ -154,8 +155,8 @@ auto JsonParser::getters() -> std::vector<Getter<M>> const&
 template <typename M>
 auto JsonParser::get(std::string const& c) -> std::optional<M>
 {
-	for (auto g : getters<M>())
-		if (auto opt_res = g(c))
+	for (auto const& g : getters<M>())
+		if (auto const opt_res = g(c))
 			return std::move(opt_res);
 	return std::nullopt;
 }
@@ -174,7 +175,7 @@ template <typename T> template <typename M>
 void Exposable<T>::expose(JsonTag const& k, M T::* p)
 {
 	auto const f = [p, k](T& o, std::string const& d){
-		auto opt_res = JsonParser::get<M>(d);
+		auto const opt_res = JsonParser::get<M>(d);
 		if (!opt_res){
 			std::cerr << JsonParserUtils::ignoreTagError(k) << std::endl;
 			std::cerr << JsonParserUtils::parseError(d) << std::endl;

@@ -113,7 +113,7 @@ auto JsonParser::map(std::string const& c) -> std::map<std::string, std::string>
 			}
 		}
 		else{
-			for (auto ve : valueExtractors()){
+			for (auto const& ve : valueExtractors()){
 				if ((opt_res = ve(c, i))){
 					auto const [r, j] = opt_res.value();
 					result.emplace(opt_s.value(), r);
