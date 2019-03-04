@@ -25,6 +25,7 @@ private:
 	static auto content(std::vector<std::string> const&) -> std::string;
 	static auto extract(std::string_view, char open, char close, int from = 0) -> OptPair;
 	static auto valueExtractors() -> std::vector<ValueExtractor> const&;
+	static auto eq(std::string_view, std::string_view, int) -> OptPair;
 private:
 	template <typename M>
 	using Getter = std::function<std::optional<M>(std::string_view)>;

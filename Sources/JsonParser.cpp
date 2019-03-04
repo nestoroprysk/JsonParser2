@@ -78,24 +78,25 @@ auto JsonParser::valueExtractors() -> std::vector<ValueExtractor> const&
 			return extract(s, '\"', '\"', i);
 		},
 		[](std::string_view s, int i) -> OptPair{
-			auto const t = std::string_view("true");
-			auto const f = std::string_view("false");
-			if (s.size() < i + t.size()) return {};
-			if (s.compare(i, t.size(), t) == 0)
-				return std::pair<std::string_view, int>{t, i + t.size()};
-			if (s.size() < i + f.size()) return {};
-			if (s.compare(i, f.size(), f) == 0)
-				return std::pair<std::string_view, int>{f, i + f.size()};
-			return {};
+			return JsonParserUtils::add(
+				[=]{return eq(s, "true", i);},
+				[=]{return eq(s, "false", i);}
+			);
 		},
 		[](std::string_view s, int i) -> OptPair{
-			auto const opt_res = JsonParserUtils::extractedArithmetic<long long>(s, i, OVERLOADS_OF(std::stoll));
-			if (!opt_res)
-				return JsonParserUtils::extractedArithmetic<unsigned long long>(s, i, OVERLOADS_OF(std::stoull));
-			return opt_res;
+			return JsonParserUtils::add([=]{return JsonParserUtils::extractedArithmetic<long long>(s, i, OVERLOADS_OF(std::stoll));},
+				[=]{return JsonParserUtils::extractedArithmetic<unsigned long long>(s, i, OVERLOADS_OF(std::stoull));});
 		}
 	};
 	return result;
+}
+
+auto JsonParser::eq(std::string_view s, std::string_view b , int i) -> OptPair
+{
+	if (s.size() < i + b.size()) return {};
+	if (s.compare(i, b.size(), b) == 0)
+		return std::pair<std::string_view, int>{b, i + b.size()};
+	return {};
 }
 
 auto JsonParser::map(std::string_view c) -> std::map<std::string_view, std::string_view>

@@ -143,4 +143,18 @@ namespace JsonParserUtils
 		auto const len = ExtractedArithmeticDetail::nbLen(opt_r.value());
 		return std::pair<std::string_view, int>{s.substr(i, len), i + len};
 	}
+
+	template <typename T>
+	auto add(T const& f)
+	{
+		return f();
+	}
+
+	template <typename T, typename... Args>
+	auto add(T const& f, Args const&... args)
+	{
+		if (auto const opt_res = f())
+			return opt_res;
+		return add(args...);
+	}
 }
