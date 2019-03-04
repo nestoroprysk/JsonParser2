@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <list>
 #include <functional>
@@ -67,14 +68,22 @@ namespace JsonParserUtils
 			"A class should be default constructable to be parsed");
 	}
 
-	inline std::string ignoreTagError(std::string const& t)
+	inline std::string ignoreTagError(std::string_view t)
 	{
-		return std::string("Warning: tag [" + t + "] ignored.");
+		auto r = std::string();
+		r += "Warning: tag [";
+		r += t;
+		r += "] ignored.";
+		return r;
 	}
 
-	inline std::string parseError(std::string const& c)
+	inline std::string parseError(std::string_view c)
 	{
-		return std::string("Warning: failed to extract value from [" + c + "]");
+		auto r = std::string();
+		r += "Warning: failed to extract value from [";
+		r += std::string(c);
+		r += "]";
+		return r;
 	}
 
 	namespace MoveVectorIntoDetail
@@ -96,7 +105,7 @@ namespace JsonParserUtils
 	}
 
 	template <typename T>
-	auto safelyConvertedArithmetic(std::string const& s, std::function<T(std::string const&)> const& f) -> std::optional<T>
+	auto safelyConvertedArithmetic(char const* s, std::function<T(char const*)> const& f) -> std::optional<T>
 	{
 		try{
 			return f(s);
@@ -109,13 +118,30 @@ namespace JsonParserUtils
 		}
 	}
 
+	namespace ExtractedArithmeticDetail
+	{
+		template <typename T>
+		auto nbLen(T n) -> int
+		{
+			static_assert(std::is_integral_v<T>, "An integral type expected");
+			if (n == 0) return 1;
+			int result = 0;
+			while (n != 0){
+				n /= 10;
+				++result;
+			}
+			return result;
+		}
+	}
+
 	template <typename T>
-	auto extractedArithmetic(std::string const& s, int i, std::function<T(std::string const&)> const& f) -> std::optional<std::pair<std::string, int>>
+	auto extractedArithmetic(std::string_view s, int i, std::function<T(char const*)> const& f) -> std::optional<std::pair<std::string_view, int>>
 	{
 		if (i >= s.size()) return {};
 		auto const opt_r = safelyConvertedArithmetic(&s[i], f);
 		if (!opt_r) return {};
-		auto const r = std::to_string(opt_r.value());
-		return std::pair<std::string, int>{r, i + r.size()};
+		auto const len = ExtractedArithmeticDetail::nbLen(opt_r.value());
+		auto const r = std::string_view(&s[i], len);
+		return std::pair<std::string_view, int>{r, i + r.size()};
 	}
 }

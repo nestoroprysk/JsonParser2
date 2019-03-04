@@ -2,3 +2,4 @@
 - provide cmake build library without tests
 - support std::pair
 - assert all the prerequisites (e.g. push_back)
+- provide a template algorithm that tries to apply func one by one till +
