@@ -64,40 +64,6 @@ private:
 	mutable std::map<std::string_view, std::string_view> m_tag2val;
 };
 
-template <typename I> template <typename C>
-void InterfaceExposingHelper<I>::add_mapping(Condition c)
-{
-	m_condition2action.push_back({c, [](std::string_view d) -> std::unique_ptr<I>{
-		return std::make_unique<C>(JsonParser::parsedObjectImpl<C>(d));
-	}});
-}
-
-template <typename I>
-auto InterfaceExposingHelper<I>::tag(std::string_view tagName) const -> std::string_view
-{
-	auto const it = m_tag2val.find(tagName);
-	if (it == m_tag2val.cend()){
-		std::cerr << JsonParserUtils::tagNotFoundError(tagName) << std::endl;
-		return {};
-	}
-	return it->second;
-}
-
-template <typename I>
-auto InterfaceExposingHelper<I>::get_result(std::string_view d) const -> std::unique_ptr<I>
-{
-	m_tag2val = JsonParser::map(d);
-	for (auto const& [c, a] : m_condition2action){
-		if (c()){
-			m_tag2val = std::map<std::string_view, std::string_view>();
-			return a(d);
-		}
-	}
-	std::cerr << JsonParserUtils::interfaceHelperError(d) << std::endl;
-	m_tag2val = std::map<std::string_view, std::string_view>();
-	return {};
-}
-
 template <typename T>
 class Exposable
 {
@@ -237,6 +203,40 @@ auto JsonParser::get(std::string_view c) -> std::optional<M>
 		if (auto opt_res = g(c))
 			return opt_res;
 	return std::nullopt;
+}
+
+template <typename I> template <typename C>
+void InterfaceExposingHelper<I>::add_mapping(Condition c)
+{
+	m_condition2action.push_back({c, [](std::string_view d) -> std::unique_ptr<I>{
+		return std::make_unique<C>(JsonParser::parsedObjectImpl<C>(d));
+	}});
+}
+
+template <typename I>
+auto InterfaceExposingHelper<I>::tag(std::string_view tagName) const -> std::string_view
+{
+	auto const it = m_tag2val.find(tagName);
+	if (it == m_tag2val.cend()){
+		std::cerr << JsonParserUtils::tagNotFoundError(tagName) << std::endl;
+		return {};
+	}
+	return it->second;
+}
+
+template <typename I>
+auto InterfaceExposingHelper<I>::get_result(std::string_view d) const -> std::unique_ptr<I>
+{
+	m_tag2val = JsonParser::map(d);
+	for (auto const& [c, a] : m_condition2action){
+		if (c()){
+			m_tag2val = std::map<std::string_view, std::string_view>();
+			return a(d);
+		}
+	}
+	std::cerr << JsonParserUtils::interfaceHelperError(d) << std::endl;
+	m_tag2val = std::map<std::string_view, std::string_view>();
+	return {};
 }
 
 template <typename T>
