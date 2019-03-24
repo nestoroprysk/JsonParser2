@@ -12,6 +12,11 @@ enable_testing()
 
 find_package(GTest REQUIRED)
 
+# boost
+
+find_package(Boost 1.69.0 REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
 # parser library
 
 set(JsonParserDir ${CMAKE_CURRENT_SOURCE_DIR}/Sources)
@@ -23,8 +28,10 @@ add_library(JsonParser STATIC ${JsonParserSources})
 # testing executable
 
 set(TestsDir ${CMAKE_CURRENT_SOURCE_DIR}/Tests)
-file(GLOB TestsSources ${TestsDir}/BasicTests.cpp
+file(GLOB TestsSources  ${TestsDir}/BasicTests.cpp
 						${TestsDir}/BasicTests.hpp
+						${TestsDir}/AdvancedTests.cpp
+						${TestsDir}/AdvancedTests.hpp
 						${TestsDir}/TestsUtils.hpp)
 
 add_executable(Tests ${TestsSources})

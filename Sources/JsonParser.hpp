@@ -148,6 +148,14 @@ auto JsonParser::getters() -> std::vector<Getter<M>> const&
 			if constexpr (std::is_unsigned_v<M>)
 				return JsonParserUtils::safelyConvertedArithmetic<M>(d.data(), OVERLOADS_OF(std::stoull));
 			return std::nullopt;
+		},
+		[](std::string_view d) -> std::optional<M>{
+			if constexpr (JsonParserUtils::is_unique_ptr_v<M>){
+				auto opt_res = get<JsonParserUtils::dereferenced_type<M>>(d);
+				if (!opt_res) return std::nullopt;
+				return std::make_unique<JsonParserUtils::dereferenced_type<M>>(std::move(opt_res.value()));
+			}
+			return std::nullopt;
 		}
 	};
 	return result;
@@ -157,8 +165,8 @@ template <typename M>
 auto JsonParser::get(std::string_view c) -> std::optional<M>
 {
 	for (auto const& g : getters<M>())
-		if (auto const opt_res = g(c))
-			return std::move(opt_res);
+		if (auto opt_res = g(c))
+			return opt_res;
 	return std::nullopt;
 }
 
@@ -176,13 +184,17 @@ template <typename T> template <typename M>
 void Exposable<T>::expose(JsonTag const& k, M T::* p)
 {
 	auto const f = [p, k](T& o, std::string_view d){
-		auto const opt_res = JsonParser::get<M>(d);
+		auto opt_res = JsonParser::get<M>(d);
 		if (!opt_res){
 			std::cerr << JsonParserUtils::ignoreTagError(k) << std::endl;
 			std::cerr << JsonParserUtils::parseError(d) << std::endl;
 			return;
 		}
-		o.*p = std::move(opt_res.value());
+		using MemberType = decltype(o.*p);
+		if constexpr (std::is_move_assignable_v<MemberType>)
+			o.*p = std::move(opt_res.value());
+		else if constexpr (JsonParserUtils::is_unique_ptr_v<MemberType>)
+			(o.*p).swap(opt_res.value());
 	};
 	m_opt_schema->emplace(k, f);
 }

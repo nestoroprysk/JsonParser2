@@ -36,6 +36,22 @@ namespace JsonParserUtils
 	static constexpr bool has_function_expose_v =
 		decltype(ExposableDetail::has_expose_function(std::declval<T&>()))::value;
 
+	namespace UniquePointerDetail
+	{
+		template<class T>
+		struct is_unique_ptr : std::false_type {};
+
+		template<class T>
+		struct is_unique_ptr<std::unique_ptr<T>> : std::true_type {};
+	}
+
+	template <typename T>
+	static constexpr bool is_unique_ptr_v =
+		UniquePointerDetail::is_unique_ptr<typename std::remove_reference<T>::type>::value;
+
+	template <typename T>
+	using dereferenced_type = typename std::remove_reference<decltype(*T())>::type;
+
 	namespace OrdContainerDetail
 	{
 		template <typename T>

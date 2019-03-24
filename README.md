@@ -78,6 +78,7 @@ See [tests](https://github.com/nestoroprysk/JsonParser2/blob/master/Tests/BasicT
 ### Basic
 - std::string
 - bool
+- std::unique_ptr
 ### Integral
 - shor
 - unsigned short
