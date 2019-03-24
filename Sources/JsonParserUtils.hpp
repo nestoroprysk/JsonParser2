@@ -93,12 +93,38 @@ namespace JsonParserUtils
 		return r;
 	}
 
+	inline std::string tagNotFoundError(std::string_view t)
+	{
+		auto r = std::string();
+		r += "Warning: tag [";
+		r += t;
+		r += "] not found.";
+		return r;
+	}
+
 	inline std::string parseError(std::string_view c)
 	{
 		auto r = std::string();
 		r += "Warning: failed to extract value from [";
 		r += std::string(c);
 		r += "]";
+		return r;
+	}
+
+	inline std::string interfaceHelperError(std::string_view c)
+	{
+		auto r = std::string();
+		r += "Warning: failed to map [";
+		r += std::string(c);
+		r += "] to a contrete class";
+		return r;
+	}
+
+	inline std::string reinitHelperError()
+	{
+		auto r = std::string();
+		r += "Warning: trying to";
+		r += " reinitialize a helper";
 		return r;
 	}
 

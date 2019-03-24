@@ -28,7 +28,22 @@ int main()
 }
 ```
 
+### Abstract Objects
+
+Call the function `parsedObject` templated on a unique pointer to your abstract class to get a unique pointer of abstract type to a concrete object
+```
+int main()
+{
+  Exposable<IShape>::register_helper<IShapeExposingHelper>();
+  using IShapeUP = std::unique_ptr<IShape>;
+  auto const abstractShape = JsonParser::parsedObject<IShapeUP>("AbstractShape.json");
+  std::cout << abstractShape->draw() << std::endl;
+}
+```
+
 # All You Need
+
+## To parse a concrete object
 
 is...
 
@@ -72,6 +87,12 @@ struct Person : Exposable<Person>
 };
 ```
 See [tests](https://github.com/nestoroprysk/JsonParser2/blob/master/Tests/BasicTests.cpp) for further examples.
+
+## To parse an abstract object
+
+TODO: add detailed manual
+
+See [tests](https://github.com/nestoroprysk/JsonParser2/blob/master/Tests/AdvancedTests.cpp) for further examples.
 
 ## Supported Types
 

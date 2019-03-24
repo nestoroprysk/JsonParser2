@@ -6,7 +6,7 @@
 		},
 		{
 			"type": "circle",
-			"side": 2
+			"r": 2
 		},
 		{
 			"type": "square",

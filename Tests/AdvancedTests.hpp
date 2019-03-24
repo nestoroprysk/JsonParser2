@@ -26,9 +26,10 @@ namespace AdvancedTestsStructs
 		}
 	};
 
-	struct IShape
+	struct IShape : Exposable<IShape>
 	{
 		virtual ~IShape(){}
+		static void expose(){}
 	};
 
 	struct Circle final: IShape, Exposable<Circle>
@@ -49,12 +50,22 @@ namespace AdvancedTestsStructs
 		}
 	};
 
+	struct IShapeExposingHelper : InterfaceExposingHelper<IShape>
+	{
+		IShapeExposingHelper()
+		{
+			add_mapping<Circle>([this]{return tag("type") == "circle";});
+			add_mapping<Square>([this]{return tag("type") == "square";});
+		}
+	};
+
 	struct Painting : Exposable<Painting>
 	{
 		std::vector<std::unique_ptr<IShape>> shapes;
 		int nbShapes = 0;
 		static void expose()
 		{
+			Exposable<IShape>::register_helper<IShapeExposingHelper>();
 			Exposable<Painting>::expose("shapes", &Painting::shapes);
 			Exposable<Painting>::expose("nbShapes", &Painting::nbShapes);
 		}

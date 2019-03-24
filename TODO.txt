@@ -4,3 +4,4 @@
 - assert all the prerequisites (e.g. push_back)
 - decide on providing the single function
 - decide on parsing containers
+- add man on abstract

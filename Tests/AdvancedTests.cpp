@@ -32,6 +32,17 @@ TEST(advancedTests, ListOfIntUPs)
 TEST(advancedTests, Painting)
 {
 	auto const jsonFileName = TestsUtils::getJsonFileFullPath("Painting");
-	auto const opt_result = JsonParser::parsedList<AdvancedTestsStructs::Painting>(jsonFileName);
+	auto const opt_result = JsonParser::parsedObject<AdvancedTestsStructs::Painting>(jsonFileName);
 	ASSERT_EQ(opt_result.has_value(), true);
+	ASSERT_EQ(opt_result->shapes.size(), 3);
+	ASSERT_NE(opt_result->shapes.at(0), nullptr);
+	ASSERT_NE(dynamic_cast<AdvancedTestsStructs::Square*>(opt_result->shapes.at(0).get()), nullptr);
+	EXPECT_EQ(dynamic_cast<AdvancedTestsStructs::Square*>(opt_result->shapes.at(0).get())->side, 5);
+	ASSERT_NE(opt_result->shapes.at(1), nullptr);
+	ASSERT_NE(dynamic_cast<AdvancedTestsStructs::Circle*>(opt_result->shapes.at(1).get()), nullptr);
+	EXPECT_EQ(dynamic_cast<AdvancedTestsStructs::Circle*>(opt_result->shapes.at(1).get())->r, 2);
+	ASSERT_NE(opt_result->shapes.at(2), nullptr);
+	ASSERT_NE(dynamic_cast<AdvancedTestsStructs::Square*>(opt_result->shapes.at(2).get()), nullptr);
+	EXPECT_EQ(dynamic_cast<AdvancedTestsStructs::Square*>(opt_result->shapes.at(2).get())->side, 8);
+	EXPECT_EQ(opt_result->nbShapes, 3);
 }

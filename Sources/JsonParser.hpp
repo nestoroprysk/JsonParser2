@@ -5,6 +5,9 @@
 #include <map>
 #include <iostream>
 
+template <typename I>
+class InterfaceExposingHelper;
+
 class JsonParser
 {
 public:
@@ -40,7 +43,60 @@ private:
 private:
 	template <typename T>
 	friend class Exposable;
+	template <typename I>
+	friend class InterfaceExposingHelper;
 };
+
+template <typename I>
+class InterfaceExposingHelper
+{
+public:
+	using Condition = std::function<bool()>;
+	using Action = std::function<std::unique_ptr<I>(std::string_view)>;
+public:
+	template <typename C>
+	void add_mapping(Condition);
+	auto tag(std::string_view tagName) const -> std::string_view;
+public:
+	auto get_result(std::string_view d) const -> std::unique_ptr<I>;
+private:
+	std::vector<std::pair<Condition, Action>> m_condition2action;
+	mutable std::map<std::string_view, std::string_view> m_tag2val;
+};
+
+template <typename I> template <typename C>
+void InterfaceExposingHelper<I>::add_mapping(Condition c)
+{
+	m_condition2action.push_back({c, [](std::string_view d) -> std::unique_ptr<I>{
+		return std::make_unique<C>(JsonParser::parsedObjectImpl<C>(d));
+	}});
+}
+
+template <typename I>
+auto InterfaceExposingHelper<I>::tag(std::string_view tagName) const -> std::string_view
+{
+	auto const it = m_tag2val.find(tagName);
+	if (it == m_tag2val.cend()){
+		std::cerr << JsonParserUtils::tagNotFoundError(tagName) << std::endl;
+		return {};
+	}
+	return it->second;
+}
+
+template <typename I>
+auto InterfaceExposingHelper<I>::get_result(std::string_view d) const -> std::unique_ptr<I>
+{
+	m_tag2val = JsonParser::map(d);
+	for (auto const& [c, a] : m_condition2action){
+		if (c()){
+			m_tag2val = std::map<std::string_view, std::string_view>();
+			return a(d);
+		}
+	}
+	std::cerr << JsonParserUtils::interfaceHelperError(d) << std::endl;
+	m_tag2val = std::map<std::string_view, std::string_view>();
+	return {};
+}
 
 template <typename T>
 class Exposable
@@ -49,13 +105,18 @@ public:
 	using JsonTag = std::string_view;
 	template <typename M>
 	static void expose(JsonTag const&, M T::*);
+	template <typename H>
+	static void register_helper();
 private:
 	using FieldFiller = std::function<void(T& o, std::string_view)>;
 	using Schema = std::map<JsonTag, FieldFiller>;
 	static auto schema() -> Schema const&;
 	static void unexpose();
+	static bool has_helper();
+	static auto get_helper() -> InterfaceExposingHelper<T> const&;
 private:
 	static std::optional<Schema> m_opt_schema;
+	static std::unique_ptr<InterfaceExposingHelper<T>> m_helper;
 private:
 	friend class JsonParser;
 };
@@ -85,7 +146,7 @@ auto JsonParser::parsedObjectImpl(std::string_view oc) -> T
 	JsonParserUtils::defaultConstructable<T>();
 	auto const m = map(oc);
 	auto result = T();
-	auto const& schema = T::schema();
+	auto const& schema = Exposable<T>::schema();
 	for (auto const& [expectedTag, f] : schema)
 		if (m.find(expectedTag) != m.end())
 			f(result, m.at(expectedTag));
@@ -105,6 +166,7 @@ auto JsonParser::parsedListImpl(std::string_view lc) -> std::vector<T>
 			auto opt_elem = get<T>(v);
 			if (!opt_elem){
 				std::cerr << JsonParserUtils::parseError(v) << std::endl;
+				i = j + 1;
 				continue;
 			}
 			result.push_back(std::move(opt_elem.value()));
@@ -151,9 +213,16 @@ auto JsonParser::getters() -> std::vector<Getter<M>> const&
 		},
 		[](std::string_view d) -> std::optional<M>{
 			if constexpr (JsonParserUtils::is_unique_ptr_v<M>){
-				auto opt_res = get<JsonParserUtils::dereferenced_type<M>>(d);
+				using MemberType = JsonParserUtils::dereferenced_type<M>;
+				if constexpr (JsonParserUtils::is_exposable_v<MemberType>){
+					if (Exposable<MemberType>::has_helper()){
+						auto const& helper = Exposable<MemberType>::get_helper();
+						return helper.get_result(d);
+					}
+				}
+				auto opt_res = get<MemberType>(d);
 				if (!opt_res) return std::nullopt;
-				return std::make_unique<JsonParserUtils::dereferenced_type<M>>(std::move(opt_res.value()));
+				return std::make_unique<MemberType>(std::move(opt_res.value()));
 			}
 			return std::nullopt;
 		}
@@ -201,5 +270,28 @@ void Exposable<T>::unexpose()
 	m_opt_schema = std::nullopt;
 }
 
+template <typename T> template <typename H>
+void Exposable<T>::register_helper()
+{
+	if (m_helper)
+		std::cerr << JsonParserUtils::reinitHelperError() << std::endl;
+	m_helper = std::make_unique<H>();
+}
+
+template <typename T>
+bool Exposable<T>::has_helper()
+{
+	return m_helper != nullptr;
+}
+
+template <typename T>
+auto Exposable<T>::get_helper() -> InterfaceExposingHelper<T> const&
+{
+	return *m_helper;
+}
+
 template <typename T>
 std::optional<typename Exposable<T>::Schema> Exposable<T>::m_opt_schema;
+
+template <typename T>
+std::unique_ptr<InterfaceExposingHelper<T>> Exposable<T>::m_helper;
