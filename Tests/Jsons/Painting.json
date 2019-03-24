@@ -1,0 +1,17 @@
+{
+	"shapes": [
+		{
+			"type": "square",
+			"side": 5
+		},
+		{
+			"type": "circle",
+			"side": 2
+		},
+		{
+			"type": "square",
+			"side": 8
+		}
+	],
+	"nbShapes": 3
+}

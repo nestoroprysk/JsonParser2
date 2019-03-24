@@ -102,7 +102,7 @@ auto JsonParser::parsedListImpl(std::string_view lc) -> std::vector<T>
 	for (auto const& ve : valueExtractors()){
 		while (auto const opt_res = ve(lc, i)){
 			auto const [v, j] = opt_res.value();
-			auto const opt_elem = get<T>(v);
+			auto opt_elem = get<T>(v);
 			if (!opt_elem){
 				std::cerr << JsonParserUtils::parseError(v) << std::endl;
 				continue;
@@ -190,11 +190,7 @@ void Exposable<T>::expose(JsonTag const& k, M T::* p)
 			std::cerr << JsonParserUtils::parseError(d) << std::endl;
 			return;
 		}
-		using MemberType = decltype(o.*p);
-		if constexpr (std::is_move_assignable_v<MemberType>)
-			o.*p = std::move(opt_res.value());
-		else if constexpr (JsonParserUtils::is_unique_ptr_v<MemberType>)
-			(o.*p).swap(opt_res.value());
+		JsonParserUtils::assign(o, p, opt_res.value());
 	};
 	m_opt_schema->emplace(k, f);
 }

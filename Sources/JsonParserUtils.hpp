@@ -173,4 +173,13 @@ namespace JsonParserUtils
 			return opt_res;
 		return add(args...);
 	}
+
+	template <typename T, typename M>
+	void assign(T& o, M T::*p, M& v)
+	{
+		if constexpr (std::is_move_assignable_v<M>)
+			o.*p = std::move(v);
+		else if constexpr (JsonParserUtils::is_unique_ptr_v<M>)
+			(o.*p).swap(v);
+	}
 }
