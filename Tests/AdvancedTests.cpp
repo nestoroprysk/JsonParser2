@@ -28,3 +28,10 @@ TEST(advancedTests, ListOfIntUPs)
 	ASSERT_NE(opt_result->at(2), nullptr);
 	EXPECT_EQ(*opt_result->at(2), 3);
 }
+
+TEST(advancedTests, Painting)
+{
+	auto const jsonFileName = TestsUtils::getJsonFileFullPath("Painting");
+	auto const opt_result = JsonParser::parsedList<AdvancedTestsStructs::Painting>(jsonFileName);
+	ASSERT_EQ(opt_result.has_value(), true);
+}
